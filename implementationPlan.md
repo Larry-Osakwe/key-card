@@ -7,7 +7,7 @@
 - [x] Configure TypeScript
 - [x] Set up Tailwind CSS
 - [x] Create folder structure
-- [ ] Set up linting and formatting (ESLint, Prettier)
+- [x] Set up linting and formatting (ESLint, Prettier)
 
 ### 1.2 Type Definitions
 - [ ] Set up core type definitions:
