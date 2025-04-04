@@ -14,12 +14,4 @@ export interface Message {
     url?: string;
     summary?: string;
   };
-}
-
-/**
- * Represents the current state of a conversation
- */
-export interface ConversationState {
-  messages: Message[];
-  isAnalyzing: boolean;
 } 

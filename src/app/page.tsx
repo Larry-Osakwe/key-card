@@ -8,7 +8,6 @@ import { type Message } from '@/types/conversation';
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [currentPR, setCurrentPR] = useState<string | null>(null);
 
   const handleSendMessage = async (content: string) => {
     const newMessage: Message = {
@@ -35,8 +34,6 @@ export default function Home() {
   };
 
   const handlePRSubmit = (url: string) => {
-    setCurrentPR(url);
-    setMessages([]);
     // TODO: Implement PR analysis
     const initialMessage: Message = {
       id: crypto.randomUUID(),
