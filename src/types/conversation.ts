@@ -1,5 +1,6 @@
 /**
- * Core type definitions for the GitHub PR Analyzer conversation system
+ * Core type definitions for the GitHub PR Analyzer conversation system 
+ * @author @Larry-Osakwe
  */
 
 /**
