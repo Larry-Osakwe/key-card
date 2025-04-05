@@ -10,22 +10,58 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  // Use tRPC mutations for generating responses
+  const generateResponseMutation = trpc.message.generateResponse.useMutation({
+    onSuccess: (data) => {
+      if (data.success) {
+        const response: Message = {
+          id: crypto.randomUUID(),
+          content: data.content,
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, response]);
+      } else {
+        // Handle error returned as success: false
+        const errorMsg: Message = {
+          id: crypto.randomUUID(),
+          content: data.content || 'Failed to generate a response. Please try again.',
+          role: 'assistant',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, errorMsg]);
+      }
+      setIsAnalyzing(false);
+    },
+    onError: (error) => {
+      console.error('Error generating response:', error);
+      
+      // Add error message and reset state
+      const errorMsg: Message = {
+        id: crypto.randomUUID(),
+        content: 'Failed to generate a response due to a server error. Please try again later.',
+        role: 'assistant',
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorMsg]);
+      setIsAnalyzing(false);
+    }
+  });
+
   // Use tRPC mutations
   const sendMessageMutation = trpc.message.sendMessage.useMutation({
     onSuccess: (data) => {
       console.log('Message sent:', data);
       
-      // Simulate assistant response (this will be replaced with actual tRPC call)
-      setTimeout(() => {
-        const response: Message = {
-          id: crypto.randomUUID(),
-          content: 'This is a simulated response using tRPC. The actual analysis will be implemented with the Python backend.',
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, response]);
-        setIsAnalyzing(false);
-      }, 1000);
+      // Create conversation history string from previous messages
+      const conversationHistory = getConversationHistory(messages);
+      
+      // Call the actual backend to generate a response
+      generateResponseMutation.mutate({
+        messageId: data.messageId,
+        previousContent: data.content,
+        conversationHistory: conversationHistory
+      });
     },
     onError: (error) => {
       console.error('Error sending message:', error);
@@ -78,6 +114,17 @@ export default function Home() {
       setIsAnalyzing(false);
     }
   });
+
+  // Helper function to extract conversation history
+  const getConversationHistory = (msgs: Message[]): string => {
+    // Limit to last 10 messages to avoid token limits
+    const recentMessages = msgs.slice(-10);
+    
+    return recentMessages.map(msg => {
+      const role = msg.role === 'user' ? 'User' : 'Assistant';
+      return `${role}: ${msg.content}`;
+    }).join('\n\n');
+  };
 
   const handleSendMessage = async (content: string) => {
     const newMessage: Message = {

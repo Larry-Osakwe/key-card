@@ -150,10 +150,20 @@ async def generate_response(
     try:
         logger.info(f"Generating response for message: {message.content[:50]}...")
         
+        # Create system prompt with conversation memory if available
+        system_prompt = "You are a helpful assistant specialized in software development and GitHub pull requests."
+        user_prompt = message.content
+        
+        # Add conversation history if available
+        if message.previous_content:
+            logger.info("Including conversation history in the prompt")
+            system_prompt += " You have a memory of previous messages in the conversation. Be consistent with information previously shared by the user."
+            user_prompt = f"Previous conversation:\n{message.previous_content}\n\nCurrent message: {message.content}\n\nPlease respond to my current message."
+        
         # Use the LLM directly for simple message responses
         llm_response = langgraph_analyzer.llm.invoke([
-            {"role": "system", "content": "You are a helpful assistant specialized in software development and GitHub pull requests."},
-            {"role": "user", "content": message.content}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
         ])
         
         # Extract content from AIMessage response

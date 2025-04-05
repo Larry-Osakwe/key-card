@@ -8,7 +8,7 @@ class Message(BaseModel):
     Attributes:
         content: The message content
         pr_url: Optional GitHub PR URL for analysis
-        previous_content: Optional previous message for context in conversations
+        previous_content: Optional previous message/conversation history for context
     """
     content: str
     pr_url: Optional[str] = None

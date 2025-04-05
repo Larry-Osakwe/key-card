@@ -53,12 +53,14 @@ export const messageRouter = router({
   generateResponse: procedure
     .input(z.object({
       messageId: z.string(),
-      previousContent: z.string()
+      previousContent: z.string(),
+      conversationHistory: z.string().optional()
     }))
     .mutation(async ({ input }) => {
       // Generate response through Python service
       const result = await generateResponse({
         content: input.previousContent,
+        previous_content: input.conversationHistory // Pass conversation history
       });
 
       return {
