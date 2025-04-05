@@ -40,7 +40,7 @@ export const messageRouter = router({
           success: result.success,
           timestamp: new Date()
         };
-      } catch (error) {
+      } catch {
         // Return a user-friendly error message for invalid URLs
         return {
           content: `Invalid GitHub URL: "${input.prUrl}". Please provide a valid GitHub pull request URL.`,
