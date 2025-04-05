@@ -18,7 +18,7 @@ interface PythonServiceResponse {
  */
 export async function analyzePR(request: PythonServiceRequest): Promise<PythonServiceResponse> {
   try {
-    const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:8000'}/analyze-pr`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8000'}/analyze-pr`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export async function analyzePR(request: PythonServiceRequest): Promise<PythonSe
  */
 export async function generateResponse(request: PythonServiceRequest): Promise<PythonServiceResponse> {
   try {
-    const response = await fetch(`${process.env.PYTHON_SERVICE_URL || 'http://localhost:8000'}/generate-response`, {
+    const response = await fetch(`${process.env.BACKEND_URL || 'http://localhost:8000'}/generate-response`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
