@@ -22,8 +22,9 @@ app = FastAPI(title="GitHub PR Analyzer API")
 
 # Configure CORS
 origins = [
-    "https://a-ai-assist.vercel.app",  # Production Vercel URL
-    "http://localhost:3000",           # Local development
+    "https://a-ai-assist.vercel.app",           # Production Vercel URL
+    "https://a-ai-assist-qp8m9umsy-larry-osakwes-projects.vercel.app",  # Preview deployment URL
+    "http://localhost:3000",                    # Local development
 ]
 
 app.add_middleware(

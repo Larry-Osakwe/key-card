@@ -11,7 +11,9 @@ export function TRPCProvider({ children }: { children: ReactNode }) {
     trpc.createClient({
       links: [
         httpBatchLink({
-          url: `${process.env.NEXT_PUBLIC_APP_URL}/api/trpc`.replace(/([^:]\/)\/+/g, "$1"),
+          url: typeof window !== 'undefined' 
+            ? `${window.location.origin}/api/trpc` 
+            : `${process.env.NEXT_PUBLIC_APP_URL}/api/trpc`,
         }),
       ],
     }),
