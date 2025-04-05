@@ -21,9 +21,14 @@ from .services.langgrapher import PRAnalysisGraph
 app = FastAPI(title="GitHub PR Analyzer API")
 
 # Configure CORS
+origins = [
+    "https://a-ai-assist.vercel.app",  # Production Vercel URL
+    "http://localhost:3000",           # Local development
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # For development; restrict in production
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
