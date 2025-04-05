@@ -14,6 +14,7 @@ backend/
 │   │   ├── langgrapher/ # LangGraph implementation
 │   │   └── github/      # GitHub API client
 ├── requirements.txt     # Python dependencies
+├── .env                 # Environment variables (not committed to version control)
 ├── README.md
 ```
 
@@ -31,12 +32,37 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-3. Run the service:
+3. Configure environment variables:
+   - Copy the `.env` file template
+   - Add your GitHub API token (optional but recommended)
+   - GitHub API token can be generated at https://github.com/settings/tokens
+   - Note: Without a token, the service will be rate-limited and won't be able to access private repositories
+
+4. Run the service:
 ```bash
 uvicorn app.main:app --reload
 ```
 
 The API will be available at http://localhost:8000
+
+## GitHub API Integration
+
+The service integrates with the GitHub API to fetch data about pull requests:
+
+- PR metadata (title, description, author, etc.)
+- Files changed in the PR
+- PR comments
+- Full diff content (for PRs with ≤100 files changed)
+
+### Benefits of Using a GitHub API Token
+
+- Higher rate limits (5,000 requests/hour vs 60 for unauthenticated requests)
+- Access to private repositories
+- More complete data access
+
+### Rate Limiting
+
+The service handles GitHub API rate limits gracefully, informing the user when limits are reached.
 
 ## API Endpoints
 
@@ -48,5 +74,5 @@ The API will be available at http://localhost:8000
 This service is consumed by the tRPC router in the Next.js frontend. The backend service handles:
 
 1. GitHub API integration
-2. LLM processing with LangGraph
-3. Response generation for user queries about PRs 
+2. LLM processing with LangGraph (coming in Phase 3.2)
+3. Response generation for user queries about PRs (coming in Phase 3.3) 
