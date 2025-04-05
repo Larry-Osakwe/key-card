@@ -1,7 +1,9 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Dict, Any
+
+# Use relative import to work with uvicorn correctly
+from .models.message import Message
 
 app = FastAPI(title="GitHub PR Analyzer API")
 
@@ -13,11 +15,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-class Message(BaseModel):
-    content: str
-    pr_url: Optional[str] = None
-    previous_content: Optional[str] = None
 
 @app.post("/analyze-pr")
 async def analyze_pr(message: Message):
