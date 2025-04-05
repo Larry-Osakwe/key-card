@@ -10,11 +10,12 @@ interface MessageListProps {
 }
 
 // Define proper types for markdown components
-interface CodeProps {
+interface ComponentProps {
   node?: any;
   inline?: boolean;
   className?: string;
   children?: ReactNode;
+  [key: string]: any;
 }
 
 export function MessageList({ messages, isAnalyzing = false }: MessageListProps) {
@@ -34,24 +35,27 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                 <div className="markdown-content prose dark:prose-invert prose-sm md:prose-base max-w-none">
                   <ReactMarkdown
                     components={{
-                      // Enhance headings
-                      h1: ({ children }) => (
-                        <h1 className="text-xl font-bold border-b pb-2 mb-4 text-gray-900 dark:text-gray-100">
-                          {children}
-                        </h1>
-                      ),
-                      h2: ({ children }) => (
-                        <h2 className="text-lg font-semibold mt-6 mb-3 text-gray-800 dark:text-gray-200">
+                      // Enhance headings with clear styling and hierarchy
+                      h2: ({ children, ...props }: ComponentProps) => (
+                        <h2 className="text-xl font-bold mt-4 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100" {...props}>
                           {children}
                         </h2>
                       ),
-                      h3: ({ children }) => (
-                        <h3 className="text-md font-semibold mt-4 mb-2 text-gray-700 dark:text-gray-300">
+                      h3: ({ children, ...props }: ComponentProps) => (
+                        <h3 className="text-lg font-semibold mt-5 mb-3 text-gray-800 dark:text-gray-200" {...props}>
                           {children}
                         </h3>
                       ),
+                      h4: ({ children, ...props }: ComponentProps) => (
+                        <h4 className="text-base font-medium mt-4 mb-2 text-gray-700 dark:text-gray-300" {...props}>
+                          {children}
+                        </h4>
+                      ),
                       // Style code blocks with better formatting
-                      code: ({ node, inline, className, children, ...props }: CodeProps) => {
+                      code: ({ node, inline, className, children, ...props }: ComponentProps) => {
+                        // Extract language from className if available (e.g., "language-javascript")
+                        const match = /language-(\w+)/.exec(className || '');
+                        
                         // For inline code, return a simple code element
                         if (inline) {
                           return (
@@ -63,68 +67,90 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                         
                         // For non-inline code blocks, return properly styled code
                         return (
-                          <code className="block whitespace-pre overflow-x-auto my-3 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono" {...props}>
+                          <code className={`block whitespace-pre overflow-x-auto my-3 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono ${
+                            match ? `language-${match[1]}` : ''
+                          }`} {...props}>
                             {children}
                           </code>
                         );
                       },
-                      // Override default paragraph to avoid nesting issues
-                      p: ({ children, ...props }) => {
-                        return (
-                          <p className="mb-4 text-gray-700 dark:text-gray-300" {...props}>
-                            {children}
-                          </p>
-                        );
-                      },
+                      // Properly format paragraphs
+                      p: ({ children, ...props }: ComponentProps) => (
+                        <p className="mb-3 text-gray-700 dark:text-gray-300" {...props}>
+                          {children}
+                        </p>
+                      ),
                       // Pre-formatted code blocks
-                      pre: ({ children, ...props }) => {
-                        return (
-                          <pre className="overflow-auto my-4 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono border border-gray-200 dark:border-gray-700" {...props}>
-                            {children}
-                          </pre>
-                        );
-                      },
+                      pre: ({ children, ...props }: ComponentProps) => (
+                        <pre className="overflow-auto my-4 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono border border-gray-200 dark:border-gray-700" {...props}>
+                          {children}
+                        </pre>
+                      ),
                       // Enhance lists
-                      ul: ({ children }) => (
-                        <ul className="list-disc pl-6 mb-4 space-y-1 text-gray-700 dark:text-gray-300">
+                      ul: ({ children, ...props }: ComponentProps) => (
+                        <ul className="list-disc pl-5 mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </ul>
                       ),
-                      ol: ({ children }) => (
-                        <ol className="list-decimal pl-6 mb-4 space-y-1 text-gray-700 dark:text-gray-300">
+                      ol: ({ children, ...props }: ComponentProps) => (
+                        <ol className="list-decimal pl-5 mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </ol>
                       ),
-                      li: ({ children }) => (
-                        <li className="mb-1">
+                      li: ({ children, ...props }: ComponentProps) => (
+                        <li className="mb-1 pl-1" {...props}>
                           {children}
                         </li>
                       ),
                       // Style blockquotes
-                      blockquote: ({ children }) => (
-                        <blockquote className="border-l-4 border-gray-300 dark:border-gray-500 pl-4 italic my-4 text-gray-600 dark:text-gray-400">
+                      blockquote: ({ children, ...props }: ComponentProps) => (
+                        <blockquote className="border-l-4 border-gray-300 dark:border-gray-500 pl-4 italic my-4 text-gray-600 dark:text-gray-400" {...props}>
                           {children}
                         </blockquote>
                       ),
                       // Style tables to be more readable
-                      table: ({ children }) => (
+                      table: ({ children, ...props }: ComponentProps) => (
                         <div className="overflow-x-auto w-full my-4 rounded-md">
-                          <table className="border-collapse table-auto w-full text-sm">
+                          <table className="border-collapse table-auto w-full text-sm" {...props}>
                             {children}
                           </table>
                         </div>
                       ),
+                      thead: ({ children, ...props }: ComponentProps) => (
+                        <thead className="bg-gray-50 dark:bg-gray-900" {...props}>
+                          {children}
+                        </thead>
+                      ),
+                      tbody: ({ children, ...props }: ComponentProps) => (
+                        <tbody {...props}>{children}</tbody>
+                      ),
                       // Style table headers
-                      th: ({ children }) => (
-                        <th className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 font-medium p-2 text-left">
+                      th: ({ children, ...props }: ComponentProps) => (
+                        <th className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 font-medium p-2 text-left" {...props}>
                           {children}
                         </th>
                       ),
                       // Style table cells
-                      td: ({ children }) => (
-                        <td className="border border-gray-300 dark:border-gray-700 p-2 text-gray-700 dark:text-gray-300">
+                      td: ({ children, ...props }: ComponentProps) => (
+                        <td className="border border-gray-300 dark:border-gray-700 p-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </td>
+                      ),
+                      // Handle hr elements
+                      hr: () => (
+                        <hr className="my-4 border-t border-gray-300 dark:border-gray-700" />
+                      ),
+                      // Handle strong elements
+                      strong: ({ children, ...props }: ComponentProps) => (
+                        <strong className="font-bold text-gray-900 dark:text-gray-100" {...props}>
+                          {children}
+                        </strong>
+                      ),
+                      // Handle emphasis elements
+                      em: ({ children, ...props }: ComponentProps) => (
+                        <em className="italic text-gray-800 dark:text-gray-200" {...props}>
+                          {children}
+                        </em>
                       ),
                     }}
                   >

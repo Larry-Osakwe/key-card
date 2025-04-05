@@ -54,13 +54,27 @@ The PR modifies {len(pr_metadata['pr_files'])} files:
         prompt += "\nThe diff is too large to include in full.\n"
     
     prompt += """
-Based on the code changes, please provide:
-1. A concise summary of the key changes in this PR
-2. A list of the most important changes
-3. Any potential issues or concerns you see
-4. Suggestions for improvements
+Based on the code changes, please provide an analysis following this EXACT format:
 
-Format your response as markdown.
+```markdown
+## Code Review for PR: [title]
+
+### Summary of Key Changes
+The pull request updates the [describe what files/components were changed]. [Provide a one-sentence overview of the changes].
+
+### Most Important Changes
+- [List the most important changes, one per line]
+
+### Potential Issues or Concerns
+- **[Issue Category]**: [Description of the potential issue and its impact]
+- **[Issue Category]**: [Description of another potential issue]
+
+### Suggestions for Improvements
+- **[Suggestion Category]**: [Description of suggested improvement]
+- **[Suggestion Category]**: [Description of another suggestion]
+```
+
+You MUST follow this exact format with the headings exactly as shown. Use markdown formatting for emphasis and code blocks where appropriate, but maintain this structure.
 """
     
     return prompt
@@ -117,7 +131,7 @@ class PRAnalysisGraph:
             # Query LLM
             logger.info("Sending request to LLM")
             llm_response = self.llm.invoke([
-                {"role": "system", "content": "You are a skilled software engineer experienced in code review."},
+                {"role": "system", "content": "You are a skilled software engineer experienced in code review. Respond with clean markdown that can be easily parsed and displayed."},
                 {"role": "user", "content": prompt}
             ])
             logger.info(f"Received response from LLM: {type(llm_response)}")
@@ -129,6 +143,16 @@ class PRAnalysisGraph:
                 analysis_content = str(llm_response)
             
             logger.info(f"Extracted analysis content of length {len(analysis_content)}")
+            
+            # Strip any markdown code block delimiters if they exist at the beginning and end
+            analysis_content = analysis_content.strip()
+            if analysis_content.startswith("```markdown"):
+                analysis_content = analysis_content[len("```markdown"):].strip()
+            elif analysis_content.startswith("```"):
+                analysis_content = analysis_content[3:].strip()
+                
+            if analysis_content.endswith("```"):
+                analysis_content = analysis_content[:-3].strip()
             
             # Create response message
             response_message = {
