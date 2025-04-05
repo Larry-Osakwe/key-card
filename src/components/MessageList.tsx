@@ -10,13 +10,20 @@ interface MessageListProps {
 }
 
 // Define proper types for markdown components
-interface ComponentProps {
-  node?: any;
-  inline?: boolean;
-  className?: string;
+type BaseProps = {
   children?: ReactNode;
-  [key: string]: any;
-}
+  className?: string;
+  /* eslint-disable-next-line @typescript-eslint/no-explicit-any -- 
+   * The `node` prop from react-markdown has a complex type that varies based on the markdown AST node type.
+   * Using `any` here is acceptable as we don't directly use the node prop in our components,
+   * but need to pass it through to satisfy react-markdown's internal typing.
+   */
+  node?: any;
+};
+
+type CodeProps = BaseProps & {
+  inline?: boolean;
+};
 
 export function MessageList({ messages, isAnalyzing = false }: MessageListProps) {
   return (
@@ -36,23 +43,23 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                   <ReactMarkdown
                     components={{
                       // Enhance headings with clear styling and hierarchy
-                      h2: ({ children, ...props }: ComponentProps) => (
+                      h2: ({ children, ...props }: BaseProps) => (
                         <h2 className="text-xl font-bold mt-4 mb-3 pb-2 border-b border-gray-200 dark:border-gray-700 text-gray-900 dark:text-gray-100" {...props}>
                           {children}
                         </h2>
                       ),
-                      h3: ({ children, ...props }: ComponentProps) => (
+                      h3: ({ children, ...props }: BaseProps) => (
                         <h3 className="text-lg font-semibold mt-5 mb-3 text-gray-800 dark:text-gray-200" {...props}>
                           {children}
                         </h3>
                       ),
-                      h4: ({ children, ...props }: ComponentProps) => (
+                      h4: ({ children, ...props }: BaseProps) => (
                         <h4 className="text-base font-medium mt-4 mb-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </h4>
                       ),
                       // Style code blocks with better formatting
-                      code: ({ node, inline, className, children, ...props }: ComponentProps) => {
+                      code: ({ inline, className, children, ...props }: CodeProps) => {
                         // Extract language from className if available (e.g., "language-javascript")
                         const match = /language-(\w+)/.exec(className || '');
                         
@@ -75,63 +82,63 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                         );
                       },
                       // Properly format paragraphs
-                      p: ({ children, ...props }: ComponentProps) => (
+                      p: ({ children, ...props }: BaseProps) => (
                         <p className="mb-3 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </p>
                       ),
                       // Pre-formatted code blocks
-                      pre: ({ children, ...props }: ComponentProps) => (
+                      pre: ({ children, ...props }: BaseProps) => (
                         <pre className="overflow-auto my-4 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono border border-gray-200 dark:border-gray-700" {...props}>
                           {children}
                         </pre>
                       ),
                       // Enhance lists
-                      ul: ({ children, ...props }: ComponentProps) => (
+                      ul: ({ children, ...props }: BaseProps) => (
                         <ul className="list-disc pl-5 mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </ul>
                       ),
-                      ol: ({ children, ...props }: ComponentProps) => (
+                      ol: ({ children, ...props }: BaseProps) => (
                         <ol className="list-decimal pl-5 mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </ol>
                       ),
-                      li: ({ children, ...props }: ComponentProps) => (
+                      li: ({ children, ...props }: BaseProps) => (
                         <li className="mb-1 pl-1" {...props}>
                           {children}
                         </li>
                       ),
                       // Style blockquotes
-                      blockquote: ({ children, ...props }: ComponentProps) => (
+                      blockquote: ({ children, ...props }: BaseProps) => (
                         <blockquote className="border-l-4 border-gray-300 dark:border-gray-500 pl-4 italic my-4 text-gray-600 dark:text-gray-400" {...props}>
                           {children}
                         </blockquote>
                       ),
                       // Style tables to be more readable
-                      table: ({ children, ...props }: ComponentProps) => (
+                      table: ({ children, ...props }: BaseProps) => (
                         <div className="overflow-x-auto w-full my-4 rounded-md">
                           <table className="border-collapse table-auto w-full text-sm" {...props}>
                             {children}
                           </table>
                         </div>
                       ),
-                      thead: ({ children, ...props }: ComponentProps) => (
+                      thead: ({ children, ...props }: BaseProps) => (
                         <thead className="bg-gray-50 dark:bg-gray-900" {...props}>
                           {children}
                         </thead>
                       ),
-                      tbody: ({ children, ...props }: ComponentProps) => (
+                      tbody: ({ children, ...props }: BaseProps) => (
                         <tbody {...props}>{children}</tbody>
                       ),
                       // Style table headers
-                      th: ({ children, ...props }: ComponentProps) => (
+                      th: ({ children, ...props }: BaseProps) => (
                         <th className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 font-medium p-2 text-left" {...props}>
                           {children}
                         </th>
                       ),
                       // Style table cells
-                      td: ({ children, ...props }: ComponentProps) => (
+                      td: ({ children, ...props }: BaseProps) => (
                         <td className="border border-gray-300 dark:border-gray-700 p-2 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </td>
@@ -141,13 +148,13 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                         <hr className="my-4 border-t border-gray-300 dark:border-gray-700" />
                       ),
                       // Handle strong elements
-                      strong: ({ children, ...props }: ComponentProps) => (
+                      strong: ({ children, ...props }: BaseProps) => (
                         <strong className="font-bold text-gray-900 dark:text-gray-100" {...props}>
                           {children}
                         </strong>
                       ),
                       // Handle emphasis elements
-                      em: ({ children, ...props }: ComponentProps) => (
+                      em: ({ children, ...props }: BaseProps) => (
                         <em className="italic text-gray-800 dark:text-gray-200" {...props}>
                           {children}
                         </em>
