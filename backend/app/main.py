@@ -2,7 +2,13 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Dict, Any, Optional
 import os
+import json
+import logging
 from dotenv import load_dotenv
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Load environment variables from .env file
 load_dotenv()
@@ -10,6 +16,7 @@ load_dotenv()
 # Use relative import to work with uvicorn correctly
 from .models.message import Message
 from .services.github import PRAnalyzer, GitHubServiceError
+from .services.langgrapher import PRAnalysisGraph
 
 app = FastAPI(title="GitHub PR Analyzer API")
 
@@ -28,77 +35,137 @@ def get_pr_analyzer():
     github_api_token = os.environ.get("GITHUB_API_TOKEN")
     return PRAnalyzer(github_api_token=github_api_token)
 
+# Create dependency for LangGraph PR Analyzer
+def get_langgraph_analyzer():
+    try:
+        return PRAnalysisGraph()
+    except ValueError as e:
+        # This will be caught when the endpoint is called
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.post("/analyze-pr")
-async def analyze_pr(message: Message, pr_analyzer: PRAnalyzer = Depends(get_pr_analyzer)):
+async def analyze_pr(
+    message: Message, 
+    pr_analyzer: PRAnalyzer = Depends(get_pr_analyzer),
+    langgraph_analyzer: PRAnalysisGraph = Depends(get_langgraph_analyzer)
+):
     """
-    Analyze a GitHub Pull Request using GitHub API.
+    Analyze a GitHub Pull Request using GitHub API and LangGraph.
     """
     try:
         if not message.pr_url:
             raise HTTPException(status_code=400, detail="PR URL is required")
         
-        # Analyze the PR using our new service
-        result = pr_analyzer.analyze_pr(message.pr_url)
+        logger.info(f"Analyzing PR: {message.pr_url}")
         
-        if result["success"]:
-            # For now, just return a formatted summary
-            # In Phase 3.2, we'll integrate this with LangGraph and LLM
-            pr_data = result["data"]
-            summary = f"# Analysis of PR: {pr_data['pr_title']}\n\n"
-            summary += f"**Repository:** {pr_data['pr_repository']['name']}\n"
-            summary += f"**Author:** {pr_data['pr_author']}\n"
-            summary += f"**Created:** {pr_data['pr_created_at']}\n\n"
-            
-            summary += f"## Description\n{pr_data['pr_description']}\n\n"
-            
-            summary += f"## Changes\n"
-            summary += f"- {len(pr_data['pr_files'])} files changed\n"
-            
-            # List the files changed (limit to 10 for brevity)
-            if pr_data['pr_files']:
-                summary += "### Files modified:\n"
-                for file in pr_data['pr_files'][:10]:
-                    summary += f"- {file['filename']} ({file['additions']} additions, {file['deletions']} deletions)\n"
-                
-                if len(pr_data['pr_files']) > 10:
-                    summary += f"- ... and {len(pr_data['pr_files']) - 10} more files\n"
-            
+        # Analyze the PR using GitHub service to get metadata
+        github_result = pr_analyzer.analyze_pr(message.pr_url)
+        
+        if not github_result["success"]:
+            logger.error(f"GitHub API error: {github_result['error']}")
             return {
-                "content": summary,
-                "success": True
-            }
-        else:
-            # Return error from GitHub service
-            return {
-                "content": f"Error analyzing PR: {result['error']}",
+                "content": f"Error analyzing PR: {github_result['error']}",
                 "success": False
             }
+            
+        # Extract PR metadata
+        pr_metadata = github_result["data"]
+        logger.info(f"Successfully fetched PR metadata: {pr_metadata['pr_title']}")
+        
+        try:
+            # Run the PR analysis through the LangGraph
+            langgraph_result = langgraph_analyzer.analyze(pr_metadata)
+            
+            logger.info(f"LangGraph analysis completed: {type(langgraph_result)}")
+            logger.info(f"LangGraph result structure: {json.dumps(langgraph_result, default=str)[:200]}...")
+            
+            # Extract the assistant message from the result
+            if langgraph_result.get("messages") and len(langgraph_result["messages"]) > 0:
+                analysis_content = langgraph_result["messages"][0]["content"]
+                return {
+                    "content": analysis_content,
+                    "success": True
+                }
+            else:
+                logger.warning("No messages found in LangGraph result")
+                # Fallback to GitHub service data if LangGraph analysis fails
+                return generate_fallback_response(pr_metadata)
+                
+        except Exception as lang_error:
+            logger.error(f"Error in LangGraph analysis: {str(lang_error)}", exc_info=True)
+            # Fallback to GitHub service data if LangGraph analysis fails
+            return generate_fallback_response(pr_metadata)
+            
     except GitHubServiceError as e:
         # Handle GitHub service errors
+        logger.error(f"GitHub service error: {str(e)}")
         return {
             "content": f"GitHub API error: {str(e)}",
             "success": False
         }
     except Exception as e:
         # Generic error handling
+        logger.error(f"Unexpected error analyzing PR: {str(e)}", exc_info=True)
         error_message = f"Failed to analyze PR: {str(e)}"
         return {
             "content": error_message,
             "success": False
         }
 
+def generate_fallback_response(pr_metadata):
+    """Generate a fallback response using PR metadata when LangGraph fails."""
+    logger.info("Generating fallback response from PR metadata")
+    summary = f"# Analysis of PR: {pr_metadata['pr_title']}\n\n"
+    summary += f"**Repository:** {pr_metadata['pr_repository']['name']}\n"
+    summary += f"**Author:** {pr_metadata['pr_author']}\n"
+    summary += f"**Created:** {pr_metadata['pr_created_at']}\n\n"
+    
+    summary += f"## Description\n{pr_metadata['pr_description']}\n\n"
+    
+    summary += f"## Changes\n"
+    summary += f"- {len(pr_metadata['pr_files'])} files changed\n"
+    
+    # List the files changed (limit to 10 for brevity)
+    if pr_metadata['pr_files']:
+        summary += "### Files modified:\n"
+        for file in pr_metadata['pr_files'][:10]:
+            summary += f"- {file['filename']} ({file['additions']} additions, {file['deletions']} deletions)\n"
+        
+        if len(pr_metadata['pr_files']) > 10:
+            summary += f"- ... and {len(pr_metadata['pr_files']) - 10} more files\n"
+    
+    return {
+        "content": summary,
+        "success": True
+    }
+
 @app.post("/generate-response")
-async def generate_response(message: Message):
+async def generate_response(
+    message: Message,
+    langgraph_analyzer: PRAnalysisGraph = Depends(get_langgraph_analyzer)
+):
     """
     Generate a response to a user message
     """
     try:
-        # This will be implemented with LLM in Phase 3.3
+        logger.info(f"Generating response for message: {message.content[:50]}...")
+        
+        # Use the LLM directly for simple message responses
+        llm_response = langgraph_analyzer.llm.invoke([
+            {"role": "system", "content": "You are a helpful assistant specialized in software development and GitHub pull requests."},
+            {"role": "user", "content": message.content}
+        ])
+        
+        # Extract content from AIMessage response
+        response_content = llm_response.content if hasattr(llm_response, 'content') else str(llm_response)
+        
+        logger.info("Successfully generated response")
         return {
-            "content": f"Mock response to: {message.content}",
+            "content": response_content,
             "success": True
         }
     except Exception as e:
+        logger.error(f"Error generating response: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":

@@ -4,6 +4,8 @@ pydantic>=2.0.0
 httpx>=0.24.0
 requests>=2.31.0
 python-dotenv>=1.0.0
-# Will be needed in Phase 3
-# langgraph>=0.0.10
-# openai>=1.1.0 
+# LangGraph and LLM dependencies
+langgraph>=0.0.10
+langchain>=0.0.300
+langchain_openai>=0.0.5
+openai>=1.1.0 
