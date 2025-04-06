@@ -165,10 +165,13 @@ export default function Home() {
     <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
         <header className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-center text-slate-800 dark:text-slate-100">
-            Adobe PR Assistant
+          <h1 className="text-2xl md:text-3xl font-bold text-center text-slate-800 dark:text-slate-100 flex items-center justify-center">
+            <span className="text-red-600 dark:text-red-500">PR</span>
+            <span className="mx-1">&nbsp;|&nbsp;</span>
+            <span>Assistant</span>
           </h1>
-          <p className="text-center text-slate-600 dark:text-slate-400 mt-2">
+          <div className="h-1 w-40 mx-auto mt-3 bg-gradient-to-r from-indigo-500 via-red-600 to-indigo-500 rounded-full"></div>
+          <p className="text-center text-slate-600 dark:text-slate-400 mt-4">
             Analyze pull requests and get intelligent feedback
           </p>
         </header>
@@ -185,12 +188,30 @@ export default function Home() {
             />
           </div>
           <div className="hidden lg:block lg:col-start-3">
-            <Card className="p-4">
-              <h2 className="text-lg font-semibold mb-3">Tips</h2>
-              <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
-                <li>• Enter a GitHub PR URL to get an analysis</li>
-                <li>• Ask follow-up questions about the PR</li>
-                <li>• Request code suggestions for improvements</li>
+            <Card className="p-5 shadow-md hover:shadow-lg transition-all duration-300 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+              <div className="flex items-center mb-4">
+                <div className="p-1.5 bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 rounded-full mr-2 shadow-inner">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 8V12" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M12 16H12.01" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+                <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-200">Tips</h2>
+              </div>
+              <ul className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  Enter a GitHub PR URL to get an analysis
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  Ask follow-up questions about the PR
+                </li>
+                <li className="flex items-start">
+                  <span className="text-red-500 mr-2">•</span>
+                  Request code suggestions for improvements
+                </li>
               </ul>
             </Card>
           </div>

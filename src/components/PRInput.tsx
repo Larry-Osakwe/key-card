@@ -25,7 +25,9 @@ export function PRInput({ onSubmit, disabled = false }: PRInputProps) {
     <Card className="p-5 shadow-md hover:shadow-lg transition-all duration-300 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
       <form onSubmit={handleSubmit}>
         <div className="flex items-center mb-4 text-slate-800 dark:text-slate-200">
-          <GitPullRequest className="h-5 w-5 mr-2 text-indigo-500" />
+          <div className="p-1.5 bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 rounded-full mr-2 shadow-inner">
+            <GitPullRequest className="h-4 w-4 text-red-500 dark:text-red-400" />
+          </div>
           <h2 className="text-lg font-semibold">Analyze Pull Request</h2>
         </div>
         
@@ -38,16 +40,16 @@ export function PRInput({ onSubmit, disabled = false }: PRInputProps) {
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               disabled={disabled}
-              className="pr-10 shadow-sm border-slate-300 dark:border-slate-600 focus-visible:ring-indigo-500"
+              className="pr-10 shadow-sm border-slate-300 dark:border-slate-600 focus-visible:ring-red-500"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-              <ArrowRight className={`h-4 w-4 transition-colors ${url.trim() ? 'text-indigo-500' : 'text-slate-400'}`} />
+              <ArrowRight className={`h-4 w-4 transition-colors ${url.trim() ? 'text-red-500' : 'text-slate-400'}`} />
             </div>
           </div>
           
           <Button 
             type="submit" 
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white transition-all" 
+            className="w-full bg-gradient-to-r from-indigo-600 to-red-600 hover:from-indigo-700 hover:to-red-700 text-white transition-all" 
             disabled={disabled || !url.trim()}
           >
             {disabled ? (
