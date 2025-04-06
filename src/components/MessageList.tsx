@@ -3,7 +3,7 @@
 import { type Message } from '@/types/conversation';
 import ReactMarkdown from 'react-markdown';
 import { ReactNode } from 'react';
-import { GitPullRequest } from 'lucide-react';
+import { GitPullRequest, Bot } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[];
@@ -47,12 +47,8 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
         <div key={message.id} className={`animate-fadeIn opacity-0 animation-delay-${index % 5}`}>
           <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {message.role === 'assistant' && (
-              <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mr-3 mt-1">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 16V12" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 8H12.01" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
+                <Bot className="h-4 w-4 text-red-500 dark:text-red-400" />
               </div>
             )}
             
@@ -233,12 +229,8 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
       
       {isAnalyzing && (
         <div className="flex justify-start animate-fadeIn">
-          <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mr-3 mt-1">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 16V12" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M12 8H12.01" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
+            <Bot className="h-4 w-4 text-red-500 dark:text-red-400" />
           </div>
           <div className="max-w-[85%] px-4 py-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-tl-none">
             <div className="flex items-center space-x-2">
