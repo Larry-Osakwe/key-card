@@ -60,13 +60,14 @@ Based on the code changes, please provide an analysis following this EXACT forma
 ## Code Review for PR: [title]
 
 ### Summary of Key Changes
-The pull request updates the [describe what files/components were changed]. [Provide a one-sentence overview of the changes].
+The pull request updates the _[filename]_ file. [Provide a one-sentence overview of the changes].
 
 ### Most Important Changes
-- [List the most important changes, one per line]
+- Changed _[identifier]_ to _[new value]_
+- [Other changes...]
 
 ### Potential Issues or Concerns
-- **[Issue Category]**: [Description of the potential issue and its impact]
+- **[Issue Category]**: Ensure that _[identifier]_ is updated consistently across [locations]
 - **[Issue Category]**: [Description of another potential issue]
 
 ### Suggestions for Improvements
@@ -74,7 +75,9 @@ The pull request updates the [describe what files/components were changed]. [Pro
 - **[Suggestion Category]**: [Description of another suggestion]
 ```
 
-You MUST follow this exact format with the headings exactly as shown. Use markdown formatting for emphasis and code blocks where appropriate, but maintain this structure.
+For simple identifiers, filenames, and single values, use _underscore_ emphasis instead of code blocks.
+Only use code blocks for actual code snippets, commands, or multi-word technical content.
+You MUST follow this exact format with the headings exactly as shown.
 """
     
     return prompt

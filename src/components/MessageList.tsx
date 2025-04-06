@@ -58,54 +58,66 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                           {children}
                         </h4>
                       ),
-                      // Style code blocks with better formatting
+                      // Handle code elements
                       code: ({ inline, className, children, ...props }: CodeProps) => {
-                        // Extract language from className if available (e.g., "language-javascript")
-                        const match = /language-(\w+)/.exec(className || '');
+                        // For inline code that's a single word/identifier, use a simpler style
+                        if (inline && typeof children === 'string' && !children.includes(' ')) {
+                          return (
+                            <span className="font-mono text-pink-500 dark:text-pink-400 bg-transparent px-0" {...props}>
+                              {children}
+                            </span>
+                          );
+                        }
                         
-                        // For inline code, return a simple code element
+                        // For inline code with spaces, use subtle background
                         if (inline) {
                           return (
-                            <code className="px-1 py-0.5 rounded text-sm font-mono bg-gray-100 dark:bg-gray-900 text-pink-500 dark:text-pink-400" {...props}>
+                            <code className="px-1.5 py-0.5 mx-0.5 rounded text-sm font-mono bg-gray-100/50 dark:bg-gray-800/50 text-gray-800 dark:text-gray-200" {...props}>
                               {children}
                             </code>
                           );
                         }
                         
-                        // For non-inline code blocks, return properly styled code
+                        // For actual code blocks, use full styling
+                        const match = /language-(\w+)/.exec(className || '');
                         return (
-                          <code className={`block whitespace-pre overflow-x-auto my-3 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono ${
+                          <code className={`block w-full whitespace-pre overflow-x-auto my-3 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono border border-gray-200 dark:border-gray-700 ${
                             match ? `language-${match[1]}` : ''
                           }`} {...props}>
                             {children}
                           </code>
                         );
                       },
-                      // Properly format paragraphs
+                      // Simple paragraph styling
                       p: ({ children, ...props }: BaseProps) => (
-                        <p className="mb-3 text-gray-700 dark:text-gray-300" {...props}>
+                        <p className="mb-3 last:mb-0 text-gray-700 dark:text-gray-300 leading-relaxed" {...props}>
                           {children}
                         </p>
                       ),
-                      // Pre-formatted code blocks
-                      pre: ({ children, ...props }: BaseProps) => (
-                        <pre className="overflow-auto my-4 rounded-md bg-gray-100 dark:bg-gray-900 p-3 text-sm font-mono border border-gray-200 dark:border-gray-700" {...props}>
-                          {children}
-                        </pre>
-                      ),
-                      // Enhance lists
+                      // Only style pre when it's an actual code block
+                      pre: ({ children, className, ...props }: BaseProps) => {
+                        if (className?.includes('language-')) {
+                          return (
+                            <pre className="my-4 last:mb-0" {...props}>
+                              {children}
+                            </pre>
+                          );
+                        }
+                        return <>{children}</>;
+                      },
+                      // Enhance lists with improved spacing
                       ul: ({ children, ...props }: BaseProps) => (
-                        <ul className="list-disc pl-5 mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props}>
+                        <ul className="list-disc pl-5 mb-4 last:mb-0 space-y-1 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </ul>
                       ),
                       ol: ({ children, ...props }: BaseProps) => (
-                        <ol className="list-decimal pl-5 mb-4 space-y-2 text-gray-700 dark:text-gray-300" {...props}>
+                        <ol className="list-decimal pl-5 mb-4 last:mb-0 space-y-1 text-gray-700 dark:text-gray-300" {...props}>
                           {children}
                         </ol>
                       ),
                       li: ({ children, ...props }: BaseProps) => (
-                        <li className="mb-1 pl-1" {...props}>
+                        <li className="pl-1" {...props}>
                           {children}
                         </li>
                       ),
