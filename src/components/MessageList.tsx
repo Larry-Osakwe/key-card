@@ -3,6 +3,7 @@
 import { type Message } from '@/types/conversation';
 import ReactMarkdown from 'react-markdown';
 import { ReactNode } from 'react';
+import { GitPullRequest } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[];
@@ -27,15 +28,46 @@ type CodeProps = BaseProps & {
 
 export function MessageList({ messages, isAnalyzing = false }: MessageListProps) {
   return (
-    <div className="space-y-4 p-4">
-      {messages.map((message) => (
-        <div key={message.id}>
+    <div className="space-y-6 p-4 md:p-6">
+      {messages.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="p-3 bg-indigo-100 dark:bg-indigo-900/30 rounded-full mb-4">
+            <GitPullRequest className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
+          </div>
+          <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-2">
+            Welcome to Adobe PR Assistant
+          </h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md">
+            Analyze a pull request by entering a GitHub PR URL, or ask me a question to get started.
+          </p>
+        </div>
+      )}
+      
+      {messages.map((message, index) => (
+        <div key={message.id} className={`animate-fadeIn opacity-0 animation-delay-${index % 5}`}>
           <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[80%] px-4 py-3 rounded-lg shadow-sm ${
+            {message.role === 'assistant' && (
+              <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mr-3 mt-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 16V12" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 8H12.01" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            )}
+            
+            <div className={`max-w-[85%] px-4 py-3 rounded-lg shadow-sm border ${
               message.role === 'user' 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                ? 'bg-indigo-600 text-white border-indigo-500 rounded-tr-none' 
+                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-tl-none'
             }`}>
+              {message.prMetadata && (
+                <div className="mb-2 text-xs text-indigo-200 dark:text-indigo-300 flex items-center">
+                  <GitPullRequest className="h-3.5 w-3.5 mr-1" />
+                  <span className="truncate">{message.prMetadata.url}</span>
+                </div>
+              )}
+              
               {message.role === 'user' ? (
                 <div className="text-sm md:text-base">{message.content}</div>
               ) : (
@@ -178,17 +210,42 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                 </div>
               )}
             </div>
+            
+            {message.role === 'user' && (
+              <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center ml-3 mt-1">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            )}
           </div>
+          
+          {message.role === 'assistant' && (
+            <div className="ml-11 mt-1">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                {new Date(message.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </span>
+            </div>
+          )}
         </div>
       ))}
+      
       {isAnalyzing && (
-        <div className="flex justify-start">
-          <div className="max-w-[80%] px-4 py-3 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-sm animate-pulse">
+        <div className="flex justify-start animate-fadeIn">
+          <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center mr-3 mt-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 16V12" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M12 8H12.01" stroke="#6366F1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <div className="max-w-[85%] px-4 py-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-tl-none">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce"></div>
-              <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-              <div className="w-3 h-3 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
-              <span className="text-gray-600 dark:text-gray-400">Analyzing...</span>
+              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              <span className="text-sm text-slate-600 dark:text-slate-400">Thinking...</span>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import { ChatContainer } from '@/components/ChatContainer';
 import { PRInput } from '@/components/PRInput';
 import { type Message } from '@/types/conversation';
 import { trpc } from '@/utils/trpc';
+import { Card } from '@/components/ui/card';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -161,19 +162,39 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen p-4">
-      <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-4">
-        <div className="lg:col-start-1">
-          <PRInput onSubmit={handlePRSubmit} disabled={isAnalyzing} />
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
+        <header className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-center text-slate-800 dark:text-slate-100">
+            Adobe PR Assistant
+          </h1>
+          <p className="text-center text-slate-600 dark:text-slate-400 mt-2">
+            Analyze pull requests and get intelligent feedback
+          </p>
+        </header>
+        
+        <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-4 md:gap-6">
+          <div className="lg:col-start-1">
+            <PRInput onSubmit={handlePRSubmit} disabled={isAnalyzing} />
+          </div>
+          <div className="w-full max-w-5xl mx-auto lg:col-start-2">
+            <ChatContainer
+              messages={messages}
+              isAnalyzing={isAnalyzing}
+              onSendMessage={handleSendMessage}
+            />
+          </div>
+          <div className="hidden lg:block lg:col-start-3">
+            <Card className="p-4">
+              <h2 className="text-lg font-semibold mb-3">Tips</h2>
+              <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
+                <li>• Enter a GitHub PR URL to get an analysis</li>
+                <li>• Ask follow-up questions about the PR</li>
+                <li>• Request code suggestions for improvements</li>
+              </ul>
+            </Card>
+          </div>
         </div>
-        <div className="w-full max-w-5xl mx-auto lg:col-start-2">
-          <ChatContainer
-            messages={messages}
-            isAnalyzing={isAnalyzing}
-            onSendMessage={handleSendMessage}
-          />
-        </div>
-        <div className="hidden lg:block lg:col-start-3" />
       </div>
     </main>
   );
