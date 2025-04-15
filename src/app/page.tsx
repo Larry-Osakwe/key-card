@@ -10,6 +10,7 @@ import { Card } from '@/components/ui/card';
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isFirstRequest, setIsFirstRequest] = useState(true);
 
   // Use tRPC mutations for generating responses
   const generateResponseMutation = trpc.message.generateResponse.useMutation({
@@ -22,6 +23,8 @@ export default function Home() {
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, response]);
+        // After first successful response, reset first request flag
+        setIsFirstRequest(false);
       } else {
         // Handle error returned as success: false
         const errorMsg: Message = {
@@ -37,10 +40,17 @@ export default function Home() {
     onError: (error) => {
       console.error('Error generating response:', error);
       
+      // Customize error message based on whether this is first request (likely cold start)
+      let errorMessage = 'Failed to generate a response due to a server error. Please try again.';
+      
+      if (isFirstRequest) {
+        errorMessage = 'The backend service is warming up (this may take up to a minute on first use). Please try again shortly.';
+      }
+      
       // Add error message and reset state
       const errorMsg: Message = {
         id: crypto.randomUUID(),
-        content: 'Failed to generate a response due to a server error. Please try again later.',
+        content: errorMessage,
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -89,6 +99,8 @@ export default function Home() {
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, response]);
+        // After first successful response, reset first request flag
+        setIsFirstRequest(false);
       } else {
         // Handle error returned as success: false
         const errorMsg: Message = {
@@ -104,10 +116,17 @@ export default function Home() {
     onError: (error) => {
       console.error('Error analyzing PR:', error);
       
+      // Customize error message based on whether this is first request (likely cold start)
+      let errorMessage = 'Failed to analyze the PR due to a server error. Please try again.';
+      
+      if (isFirstRequest) {
+        errorMessage = 'The backend service is warming up (this may take up to a minute on first use). Please try again shortly.';
+      }
+      
       // Add error message and reset state
       const errorMsg: Message = {
         id: crypto.randomUUID(),
-        content: 'Failed to analyze the PR due to a server error. Please try again later.',
+        content: errorMessage,
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -211,6 +230,12 @@ export default function Home() {
                 <li className="flex items-start">
                   <span className="text-red-500 mr-2">•</span>
                   Request code suggestions for improvements
+                </li>
+                <li className="flex items-start mt-4 border-t border-slate-200 dark:border-slate-700 pt-3">
+                  <span className="text-amber-500 mr-2">⚠️</span>
+                  <span className="text-amber-600 dark:text-amber-400">
+                    The backend service may take up to a minute to wake up on first use after a period of inactivity.
+                  </span>
                 </li>
               </ul>
             </Card>
