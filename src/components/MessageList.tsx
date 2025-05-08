@@ -3,9 +3,8 @@
 import { type Message } from '@/types/conversation';
 import ReactMarkdown from 'react-markdown';
 import { ReactNode } from 'react';
-import { Bot, Info, BarChart } from 'lucide-react';
-import { SourcesList } from './SourcesList';
-import { ScoreDisplay } from './ScoreDisplay';
+import { Bot, Info } from 'lucide-react';
+import { ResponseDetails } from './ResponseDetails';
 
 interface MessageListProps {
   messages: Message[];
@@ -201,27 +200,8 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                     {message.content}
                   </ReactMarkdown>
                   
-                  {/* Display sources if available */}
-                  {message.sources && message.sources.length > 0 && (
-                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                        <Info className="h-3.5 w-3.5 mr-1 text-blue-500 dark:text-blue-400" />
-                        Sources
-                      </h4>
-                      <SourcesList sources={message.sources} />
-                    </div>
-                  )}
-                  
-                  {/* Display scores if available */}
-                  {message.scores && (
-                    <div className="mt-3">
-                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
-                        <BarChart className="h-3.5 w-3.5 mr-1 text-blue-500 dark:text-blue-400" />
-                        Response Quality
-                      </h4>
-                      <ScoreDisplay scores={message.scores} />
-                    </div>
-                  )}
+                  {/* Display sources and scores in a collapsible section */}
+                  <ResponseDetails sources={message.sources} scores={message.scores} />
                 </div>
               )}
             </div>
