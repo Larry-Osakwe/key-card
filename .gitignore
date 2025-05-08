@@ -65,7 +65,7 @@ venv/
 
 # project docs
 prd.md
-PRD.md
-implementationPlan.md
+implementation_plan.md
+migration_steps.md
 
 .vercelignore
