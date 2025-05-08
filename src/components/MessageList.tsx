@@ -3,7 +3,9 @@
 import { type Message } from '@/types/conversation';
 import ReactMarkdown from 'react-markdown';
 import { ReactNode } from 'react';
-import { GitPullRequest, Bot } from 'lucide-react';
+import { Bot, Info, BarChart } from 'lucide-react';
+import { SourcesList } from './SourcesList';
+import { ScoreDisplay } from './ScoreDisplay';
 
 interface MessageListProps {
   messages: Message[];
@@ -31,14 +33,14 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
     <div className="space-y-6 p-4 md:p-6">
       {messages.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="p-3 bg-gradient-to-br from-indigo-100 to-rose-100 dark:from-indigo-900/30 dark:to-red-900/20 rounded-full mb-4 shadow-inner">
-            <GitPullRequest className="h-8 w-8 text-indigo-500 dark:text-indigo-400" />
+          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/20 rounded-full mb-4 shadow-inner">
+            <Info className="h-8 w-8 text-blue-500 dark:text-blue-400" />
           </div>
           <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-2">
-            Welcome to <span className="text-red-600 dark:text-red-400 font-semibold">PR Assistant</span>
+            Welcome to <span className="text-blue-600 dark:text-blue-400 font-semibold">Support Assistant</span>
           </h3>
           <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md">
-            Analyze a pull request by entering a GitHub PR URL, or ask me a question to get started.
+            Ask me any customer support question to get started. I'll provide answers with verified sources.
           </p>
         </div>
       )}
@@ -47,22 +49,17 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
         <div key={message.id} className={`animate-fadeIn opacity-0 animation-delay-${index % 5}`}>
           <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {message.role === 'assistant' && (
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
-                <Bot className="h-4 w-4 text-red-500 dark:text-red-400" />
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
+                <Bot className="h-4 w-4 text-blue-500 dark:text-blue-400" />
               </div>
             )}
             
             <div className={`max-w-[85%] px-4 py-3 rounded-lg shadow-sm border ${
               message.role === 'user' 
-                ? 'bg-gradient-to-r from-indigo-600 to-red-600 text-white border-indigo-500 rounded-tr-none' 
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500 rounded-tr-none' 
                 : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-tl-none'
             }`}>
-              {message.prMetadata && (
-                <div className="mb-2 text-xs text-indigo-200 dark:text-indigo-300 flex items-center">
-                  <GitPullRequest className="h-3.5 w-3.5 mr-1" />
-                  <span className="truncate">{message.prMetadata.url}</span>
-                </div>
-              )}
+              {/* PR metadata removed - no longer needed for support system */}
               
               {message.role === 'user' ? (
                 <div className="text-sm md:text-base">{message.content}</div>
@@ -203,15 +200,37 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                   >
                     {message.content}
                   </ReactMarkdown>
+                  
+                  {/* Display sources if available */}
+                  {message.sources && message.sources.length > 0 && (
+                    <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                        <Info className="h-3.5 w-3.5 mr-1 text-blue-500 dark:text-blue-400" />
+                        Sources
+                      </h4>
+                      <SourcesList sources={message.sources} />
+                    </div>
+                  )}
+                  
+                  {/* Display scores if available */}
+                  {message.scores && (
+                    <div className="mt-3">
+                      <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 flex items-center">
+                        <BarChart className="h-3.5 w-3.5 mr-1 text-blue-500 dark:text-blue-400" />
+                        Response Quality
+                      </h4>
+                      <ScoreDisplay scores={message.scores} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>
             
             {message.role === 'user' && (
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 flex items-center justify-center ml-3 mt-1">
+              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/20 flex items-center justify-center ml-3 mt-1">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#EF4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" stroke="#3B82F6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
             )}
@@ -229,14 +248,14 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
       
       {isAnalyzing && (
         <div className="flex justify-start animate-fadeIn">
-          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
-            <Bot className="h-4 w-4 text-red-500 dark:text-red-400" />
+          <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
+            <Bot className="h-4 w-4 text-blue-500 dark:text-blue-400" />
           </div>
           <div className="max-w-[85%] px-4 py-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm rounded-tl-none">
             <div className="flex items-center space-x-2">
-              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
-              <div className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.2s]"></div>
+              <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce [animation-delay:0.4s]"></div>
               <span className="text-sm text-slate-600 dark:text-slate-400">Thinking...</span>
             </div>
           </div>

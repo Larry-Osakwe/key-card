@@ -25,9 +25,9 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
   return (
     <form onSubmit={handleSubmit} className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
       {isFocused && (
-        <div className="flex items-center text-xs text-red-600 dark:text-red-400 mb-2 animate-fadeIn">
+        <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 mb-2 animate-fadeIn">
           <Lightbulb className="h-3 w-3 mr-1" />
-          <span>Try asking about specific PR details or request code suggestions</span>
+          <span>Try asking about account issues, billing questions, or device troubleshooting</span>
         </div>
       )}
       <div className="flex gap-2">
@@ -43,7 +43,7 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
         <Button 
           type="submit" 
           disabled={disabled || !input.trim()} 
-          className={`bg-gradient-to-r from-indigo-600 to-red-600 hover:from-indigo-700 hover:to-red-700 text-white transition-all ${!input.trim() ? 'opacity-70' : 'opacity-100'}`}
+          className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all ${!input.trim() ? 'opacity-70' : 'opacity-100'}`}
         >
           <SendHorizontal className="h-5 w-5" />
           <span className="sr-only">Send message</span>

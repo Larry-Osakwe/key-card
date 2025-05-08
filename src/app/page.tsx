@@ -2,16 +2,16 @@
 
 import { useState } from 'react';
 import { ChatContainer } from '@/components/ChatContainer';
-import { PRInput } from '@/components/PRInput';
 import { type Message } from '@/types/conversation';
 import { trpc } from '@/utils/trpc';
-import { Card } from '@/components/ui/card';
 
 export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isFirstRequest, setIsFirstRequest] = useState(true);
 
+  // Use tRPC mutations for sending messages and generating responses
+  const sendMessageMutation = trpc.message.sendMessage.useMutation();
+  
   // Use tRPC mutations for generating responses
   const generateResponseMutation = trpc.message.generateResponse.useMutation({
     onSuccess: (data) => {
@@ -21,10 +21,11 @@ export default function Home() {
           content: data.content,
           role: 'assistant',
           timestamp: new Date(),
+          // Add sources and scores from the response
+          sources: data.sources,
+          scores: data.scores
         };
         setMessages(prev => [...prev, response]);
-        // After first successful response, reset first request flag
-        setIsFirstRequest(false);
       } else {
         // Handle error returned as success: false
         const errorMsg: Message = {
@@ -40,93 +41,10 @@ export default function Home() {
     onError: (error) => {
       console.error('Error generating response:', error);
       
-      // Customize error message based on whether this is first request (likely cold start)
-      let errorMessage = 'Failed to generate a response due to a server error. Please try again.';
-      
-      if (isFirstRequest) {
-        errorMessage = 'The backend service is warming up (this may take up to a minute on first use). Please try again shortly.';
-      }
-      
       // Add error message and reset state
       const errorMsg: Message = {
         id: crypto.randomUUID(),
-        content: errorMessage,
-        role: 'assistant',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMsg]);
-      setIsAnalyzing(false);
-    }
-  });
-
-  // Use tRPC mutations
-  const sendMessageMutation = trpc.message.sendMessage.useMutation({
-    onSuccess: (data) => {
-      console.log('Message sent:', data);
-      
-      // Create conversation history string from previous messages
-      const conversationHistory = getConversationHistory(messages);
-      
-      // Call the actual backend to generate a response
-      generateResponseMutation.mutate({
-        messageId: data.messageId,
-        previousContent: data.content,
-        conversationHistory: conversationHistory
-      });
-    },
-    onError: (error) => {
-      console.error('Error sending message:', error);
-      
-      // Add error message and reset state
-      const errorMsg: Message = {
-        id: crypto.randomUUID(),
-        content: 'Failed to send message. Please try again.',
-        role: 'assistant',
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, errorMsg]);
-      setIsAnalyzing(false);
-    }
-  });
-  
-  const analyzePRMutation = trpc.message.analyzePR.useMutation({
-    onSuccess: (data) => {
-      if (data.success) {
-        const response: Message = {
-          id: crypto.randomUUID(),
-          content: data.content,
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, response]);
-        // After first successful response, reset first request flag
-        setIsFirstRequest(false);
-      } else {
-        // Handle error returned as success: false
-        const errorMsg: Message = {
-          id: crypto.randomUUID(),
-          content: data.content || 'Failed to analyze the PR. Please try again.',
-          role: 'assistant',
-          timestamp: new Date(),
-        };
-        setMessages(prev => [...prev, errorMsg]);
-      }
-      setIsAnalyzing(false);
-    },
-    onError: (error) => {
-      console.error('Error analyzing PR:', error);
-      
-      // Customize error message based on whether this is first request (likely cold start)
-      let errorMessage = 'Failed to analyze the PR due to a server error. Please try again.';
-      
-      if (isFirstRequest) {
-        errorMessage = 'The backend service is warming up (this may take up to a minute on first use). Please try again shortly.';
-      }
-      
-      // Add error message and reset state
-      const errorMsg: Message = {
-        id: crypto.randomUUID(),
-        content: errorMessage,
+        content: 'Failed to generate a response due to a server error. Please try again.',
         role: 'assistant',
         timestamp: new Date(),
       };
@@ -146,9 +64,18 @@ export default function Home() {
     }).join('\n\n');
   };
 
+  // Handle sending a new message
   const handleSendMessage = async (content: string) => {
+    if (!content.trim()) return;
+
+    // Step 1: Store the user message
+    const userMessageResult = await sendMessageMutation.mutateAsync({
+      content,
+      role: 'user'
+    });
+    
     const newMessage: Message = {
-      id: crypto.randomUUID(),
+      id: userMessageResult.messageId,
       content,
       role: 'user',
       timestamp: new Date(),
@@ -157,27 +84,12 @@ export default function Home() {
     setMessages(prev => [...prev, newMessage]);
     setIsAnalyzing(true);
     
-    // Use tRPC to send the message
-    sendMessageMutation.mutate({
-      content,
-      role: 'user',
+    // Step 2: Generate a response
+    await generateResponseMutation.mutateAsync({
+      messageId: userMessageResult.messageId,
+      previousContent: content,
+      conversationHistory: getConversationHistory(messages)
     });
-  };
-
-  const handlePRSubmit = (url: string) => {
-    const initialMessage: Message = {
-      id: crypto.randomUUID(),
-      content: `Analyzing PR: ${url}`,
-      role: 'assistant',
-      timestamp: new Date(),
-      prMetadata: { url }
-    };
-    // Append to messages instead of replacing
-    setMessages(prev => [...prev, initialMessage]);
-    setIsAnalyzing(true);
-    
-    // Use tRPC to analyze the PR
-    analyzePRMutation.mutate({ prUrl: url });
   };
 
   return (
@@ -185,20 +97,20 @@ export default function Home() {
       <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
         <header className="mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-bold text-center text-slate-800 dark:text-slate-100 flex items-center justify-center">
-            <span className="text-red-600 dark:text-red-500">PR</span>
+            <span className="text-blue-600 dark:text-blue-500">Support</span>
             <span className="mx-1">&nbsp;|&nbsp;</span>
             <span>Assistant</span>
           </h1>
-          <div className="h-1 w-40 mx-auto mt-3 bg-gradient-to-r from-indigo-500 via-red-600 to-indigo-500 rounded-full"></div>
+          <div className="h-1 w-40 mx-auto mt-3 bg-gradient-to-r from-blue-500 via-indigo-600 to-blue-500 rounded-full"></div>
           <p className="text-center text-slate-600 dark:text-slate-400 mt-4">
-            Analyze pull requests and get intelligent feedback
+            Get answers to your support questions with verified sources
           </p>
         </header>
         
         <div className="max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-[320px_1fr_320px] gap-4 md:gap-6">
-          <div className="lg:col-start-1">
+          {/* <div className="lg:col-start-1">
             <PRInput onSubmit={handlePRSubmit} disabled={isAnalyzing} />
-          </div>
+          </div> */}
           <div className="w-full max-w-5xl mx-auto lg:col-start-2">
             <ChatContainer
               messages={messages}
@@ -207,7 +119,7 @@ export default function Home() {
             />
           </div>
           <div className="hidden lg:block lg:col-start-3">
-            <Card className="p-5 shadow-md hover:shadow-lg transition-all duration-300 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+            {/* <Card className="p-5 shadow-md hover:shadow-lg transition-all duration-300 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
               <div className="flex items-center mb-4">
                 <div className="p-1.5 bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20 rounded-full mr-2 shadow-inner">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -238,7 +150,7 @@ export default function Home() {
                   </span>
                 </li>
               </ul>
-            </Card>
+            </Card> */}
           </div>
         </div>
       </div>
