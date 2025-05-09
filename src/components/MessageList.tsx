@@ -58,7 +58,6 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500 rounded-tr-none' 
                 : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-tl-none'
             }`}>
-              {/* PR metadata removed - no longer needed for support system */}
               
               {message.role === 'user' ? (
                 <div className="text-sm md:text-base">{message.content}</div>

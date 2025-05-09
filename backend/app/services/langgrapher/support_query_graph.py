@@ -2,10 +2,12 @@ from typing import TypedDict, List, Dict, Any, Annotated, Optional, Literal
 import uuid
 from datetime import datetime
 import httpx
+import json
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
-   
+import asyncio
+
 # Define the state for our LangGraph
 class QueryState(TypedDict):
     # Chat and query state
@@ -53,16 +55,23 @@ class SupportQueryGraph:
         # Add nodes
         graph.add_node("analyze_query", self.analyze_query)
         graph.add_node("rewrite_query", self.rewrite_query)
-        graph.add_node("retrieve_internal_docs", self.retrieve_internal_docs)
-        graph.add_node("retrieve_web_data", self.retrieve_web_data)
+        graph.add_node("retrieve_data_from_both_sources", self.retrieve_data_from_both_sources)
         graph.add_node("generate_response", self.generate_response)
         graph.add_node("evaluate_response", self.evaluate_response)
         
+        # Add conditional edge after analysis to handle different query types
+        graph.add_conditional_edges(
+            "analyze_query",
+            self.route_by_query_type,
+            {
+                "greeting": "generate_response",  # Skip data retrieval for greetings
+                "complex": "rewrite_query"        # Full processing for complex queries
+            }
+        )
+        
         # Add edges
-        graph.add_edge("analyze_query", "rewrite_query")
-        graph.add_edge("rewrite_query", "retrieve_internal_docs")
-        graph.add_edge("retrieve_internal_docs", "retrieve_web_data")
-        graph.add_edge("retrieve_web_data", "generate_response")
+        graph.add_edge("rewrite_query", "retrieve_data_from_both_sources")
+        graph.add_edge("retrieve_data_from_both_sources", "generate_response")
         graph.add_edge("generate_response", "evaluate_response")
         
         # Add conditional edge for refinement
@@ -85,10 +94,57 @@ class SupportQueryGraph:
         # Get the current query
         query = state["current_query"]
         
-        # Use LLM to analyze the query
+        # Simple pattern matching for greetings and casual messages
+        # This is faster than an LLM call for very simple cases
+        query_lower = query.lower().strip()
+        
+        # Check for greeting patterns
+        greeting_patterns = ["hi", "hello", "hey", "greetings", "howdy"]
+        is_simple_greeting = False
+        
+        # Check if it's a simple greeting (allowing for repeated characters like "hiii")
+        for pattern in greeting_patterns:
+            # Basic pattern: starts with greeting pattern
+            if query_lower.startswith(pattern):
+                remaining = query_lower[len(pattern):]
+                # Check if the rest is just repeated characters or punctuation
+                if not remaining or all(c in "!.?i " for c in remaining):
+                    is_simple_greeting = True
+                    break
+        
+        if is_simple_greeting:
+            state["query_type"] = "greeting"
+            return state
+            
+        # For slightly more complex queries, use the LLM to classify
+        if len(query.split()) <= 5:
+            # Use a simpler prompt for short queries to improve performance
+            classify_prompt = ChatPromptTemplate.from_messages([
+                ("system", "Classify this query as one of: greeting, question, command, statement, or other."),
+                ("user", "{query}")
+            ])
+            
+            response = self.llm.invoke(classify_prompt.format(query=query))
+            response_text = response.content.lower()
+            
+            # Extract query type from response
+            if "greeting" in response_text:
+                state["query_type"] = "greeting"
+            elif "question" in response_text:
+                state["query_type"] = "question"
+            elif "command" in response_text:
+                state["query_type"] = "command"
+            elif "statement" in response_text:
+                state["query_type"] = "statement"
+            else:
+                state["query_type"] = "other"
+                
+            return state
+            
+        # For more complex queries, perform a more detailed analysis
         analyze_prompt = ChatPromptTemplate.from_messages([
             ("system", "You are an AI assistant that analyzes customer support queries. "
-                        "Classify the query type and determine key aspects of the query."),
+                      "Classify the query type and determine key aspects of the query."),
             ("user", "{query}")
         ])
         
@@ -99,8 +155,10 @@ class SupportQueryGraph:
         if "reset" in query.lower() or "restart" in query.lower():
             query_type = "troubleshooting"
         elif "account" in query.lower() or "password" in query.lower():
-            query_type = "account_management"
-        
+            query_type = "account_issue"
+        elif "billing" in query.lower() or "payment" in query.lower():
+            query_type = "billing_inquiry"
+            
         # Update state
         state["query_type"] = query_type
         state["updated_at"] = datetime.now().isoformat()
@@ -140,74 +198,93 @@ class SupportQueryGraph:
         
         return state
     
-    async def retrieve_internal_docs(self, state: QueryState) -> QueryState:
-        """Retrieve relevant data from internal documentation"""
+    async def retrieve_data_from_both_sources(self, state: QueryState) -> QueryState:
+        """Retrieve data from both internal docs and web data in parallel"""
         # Get sub-queries
         sub_queries = state["sub_queries"]
         
-        # Use MCP server to search internal docs
-        results = []
-        for query in sub_queries:
-            try:
-                # Call the internal docs search endpoint
-                async with httpx.AsyncClient() as client:
-                    response = await client.get(
-                        "http://localhost:8000/internal-docs/search",
-                        params={"query": query}
-                    )
-                    
-                    if response.status_code == 200:
-                        docs_results = response.json()
-                        # Add source type to each result
-                        for result in docs_results:
-                            result["source_type"] = "internal"
-                        results.extend(docs_results)
-                    else:
-                        # Log error and continue with empty results
-                        print(f"Error searching internal docs: {response.text}")
-            except Exception as e:
-                print(f"Exception searching internal docs: {str(e)}")
-                # Continue with empty results for this query
-        
-        # Update state
-        state["internal_docs_results"] = results
-        state["updated_at"] = datetime.now().isoformat()
-        
-        return state
-    
-    async def retrieve_web_data(self, state: QueryState) -> QueryState:
-        """Retrieve relevant data from web sources"""
-        # Get sub-queries
-        sub_queries = state["sub_queries"]
-        
-        # Initialize results
-        all_results = []
-        
-        # Query web data for each sub-query
-        async with httpx.AsyncClient() as client:
+        # Create tasks for both data sources to run in parallel
+        async def fetch_internal_docs():
+            results = []
             for query in sub_queries:
                 try:
-                    # Call the web data search endpoint
-                    response = await client.get(
-                        "http://localhost:8000/web-data/search",
-                        params={"query": query}
-                    )
-                    
-                    if response.status_code == 200:
-                        web_results = response.json()
-                        # Add source type to each result
-                        for result in web_results:
-                            result["source_type"] = "web"
-                        all_results.extend(web_results)
-                    else:
-                        # Log error and continue with empty results
-                        print(f"Error searching web data: {response.text}")
+                    async with httpx.AsyncClient() as client:
+                        response = await client.get(
+                            "http://localhost:8000/internal-docs/search",
+                            params={"query": query}
+                        )
+                        
+                        if response.status_code == 200:
+                            # Parse the nested JSON structure
+                            outer_json = response.json()
+                            if outer_json and isinstance(outer_json, list) and len(outer_json) > 0:
+                                # Extract the text field which contains the actual results
+                                text_content = outer_json[0].get("text", "[]")
+                                # Parse the inner JSON
+                                try:
+                                    docs_results = json.loads(text_content)
+                                    # Add source type to each result if not already present
+                                    for result in docs_results:
+                                        if "source_type" not in result:
+                                            result["source_type"] = "internal"
+                                    results.extend(docs_results)
+                                except json.JSONDecodeError as je:
+                                    print(f"Error parsing internal docs JSON: {je}")
+                            else:
+                                print(f"Unexpected internal docs response format: {outer_json}")
+                        else:
+                            print(f"Error searching internal docs: {response.text}")
+                except Exception as e:
+                    print(f"Exception searching internal docs: {str(e)}")
+            return results
+            
+        async def fetch_web_data():
+            results = []
+            for query in sub_queries:
+                try:
+                    async with httpx.AsyncClient() as client:
+                        response = await client.get(
+                            "http://localhost:8000/web-data/search",
+                            params={"query": query}
+                        )
+                        
+                        if response.status_code == 200:
+                            # Parse the nested JSON structure
+                            outer_json = response.json()
+                            if outer_json and isinstance(outer_json, list) and len(outer_json) > 0:
+                                # Extract the text field which contains the actual results
+                                text_content = outer_json[0].get("text", "[]")
+                                # Parse the inner JSON
+                                try:
+                                    web_results = json.loads(text_content)
+                                    # Add source type to each result if not already present
+                                    for result in web_results:
+                                        if "source_type" not in result:
+                                            result["source_type"] = "web"
+                                    results.extend(web_results)
+                                except json.JSONDecodeError as je:
+                                    print(f"Error parsing web data JSON: {je}")
+                            else:
+                                print(f"Unexpected web data response format: {outer_json}")
+                        else:
+                            print(f"Error searching web data: {response.text}")
                 except Exception as e:
                     print(f"Exception searching web data: {str(e)}")
-                    # Continue with empty results for this query
+            return results
         
-        # Update state
-        state["web_data_results"] = all_results
+        # Run both tasks in parallel
+        internal_docs_task = asyncio.create_task(fetch_internal_docs())
+        web_data_task = asyncio.create_task(fetch_web_data())
+        
+        # Wait for both tasks to complete
+        internal_docs_results, web_data_results = await asyncio.gather(
+            internal_docs_task, 
+            web_data_task
+        )
+        
+        # Update state with results from both sources
+        state["internal_docs_results"] = internal_docs_results
+        state["web_data_results"] = web_data_results
         state["updated_at"] = datetime.now().isoformat()
         
         return state
@@ -216,6 +293,15 @@ class SupportQueryGraph:
         """Generate a response using the retrieved data"""
         # Get query and retrieved data
         query = state["current_query"]
+        query_type = state.get("query_type", "")
+        
+        # For greetings, we already set the response content in route_by_query_type
+        if query_type == "greeting" and state.get("response_content"):
+            # Set empty selected sources since we didn't retrieve any
+            state["selected_sources"] = []
+            return state
+            
+        # For other query types, proceed with normal response generation
         internal_results = state.get("internal_docs_results", [])
         web_results = state.get("web_data_results", [])
         
@@ -306,6 +392,17 @@ class SupportQueryGraph:
             return "refine"
         return "complete"
     
+    def route_by_query_type(self, state: QueryState) -> Literal["greeting", "complex"]:
+        """Route the query based on its type"""
+        query_type = state.get("query_type", "")
+        
+        if query_type == "greeting":
+            # For greetings, generate a standard response without data retrieval
+            state["response_content"] = "Hello! How can I assist you today? If you have a question, feel free to ask, and I'll do my best to help."
+            return "greeting"
+            
+        return "complex"
+    
     async def process(self, query: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """Process a customer support query"""
         # Initialize state
@@ -327,6 +424,24 @@ class SupportQueryGraph:
             "created_at": datetime.now().isoformat(),
             "updated_at": datetime.now().isoformat()
         }
+        
+        # For very simple queries (1-2 words), bypass the graph and use a simplified flow
+        if len(query.strip().split()) <= 2 and not any(char in query for char in "?!.,:;"):
+            # Analyze query type
+            if query.lower() in ["hi", "hello", "hey", "greetings"]:
+                state["query_type"] = "greeting"
+                state["response_content"] = "Hello! How can I assist you today? If you have a question, feel free to ask, and I'll do my best to help."
+                return {
+                    "content": state["response_content"],
+                    "sources": [],
+                    "scores": {
+                        "overall": 0.9,
+                        "keyword": 0.9,
+                        "llm": 0.9
+                    },
+                    "refinements": 0,
+                    "success": True
+                }
         
         # Run the graph
         final_state = await self.graph.ainvoke(state)

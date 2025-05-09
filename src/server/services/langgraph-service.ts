@@ -19,7 +19,7 @@ export async function generateResponse(message: string, previousContent?: string
         body: JSON.stringify({ 
           message,
           previous_content: previousContent || null,
-          session_id: null // Let the backend generate a session ID
+          session_id: null 
         }),
       }
     );
