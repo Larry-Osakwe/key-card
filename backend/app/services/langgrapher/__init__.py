@@ -1,15 +1,11 @@
 """
-LangGraph service for PR analysis.
+LangGraph service for customer support query processing.
 
-This module will contain the LangGraph implementation for analyzing GitHub PRs.
+This module contains the LangGraph implementation for processing customer support queries.
 """
 
-from .pr_analyzer import PRAnalysisGraph
-from .pr_state import PRMetadata, AnalysisResult, State
+from .support_query_graph import SupportQueryGraph
 
 __all__ = [
-    "PRAnalysisGraph",
-    "PRMetadata",
-    "AnalysisResult",
-    "State"
+    "SupportQueryGraph"
 ] 

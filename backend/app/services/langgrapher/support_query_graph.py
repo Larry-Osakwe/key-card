@@ -145,24 +145,32 @@ class SupportQueryGraph:
         # Get sub-queries
         sub_queries = state["sub_queries"]
         
-        # Initialize results
-        all_results = []
-        
-        # Query internal docs for each sub-query
-        async with httpx.AsyncClient() as client:
-            for query in sub_queries:
+        # Use MCP server to search internal docs
+        results = []
+        for query in sub_queries:
+            try:
                 # Call the internal docs search endpoint
-                response = await client.get(
-                    "http://localhost:8000/internal-docs/search",
-                    params={"query": query}
-                )
-                
-                if response.status_code == 200:
-                    results = response.json()
-                    all_results.extend(results)
+                async with httpx.AsyncClient() as client:
+                    response = await client.get(
+                        "http://localhost:8000/internal-docs/search",
+                        params={"query": query}
+                    )
+                    
+                    if response.status_code == 200:
+                        docs_results = response.json()
+                        # Add source type to each result
+                        for result in docs_results:
+                            result["source_type"] = "internal"
+                        results.extend(docs_results)
+                    else:
+                        # Log error and continue with empty results
+                        print(f"Error searching internal docs: {response.text}")
+            except Exception as e:
+                print(f"Exception searching internal docs: {str(e)}")
+                # Continue with empty results for this query
         
         # Update state
-        state["internal_docs_results"] = all_results
+        state["internal_docs_results"] = results
         state["updated_at"] = datetime.now().isoformat()
         
         return state
@@ -178,15 +186,25 @@ class SupportQueryGraph:
         # Query web data for each sub-query
         async with httpx.AsyncClient() as client:
             for query in sub_queries:
-                # Call the web data search endpoint
-                response = await client.get(
-                    "http://localhost:8000/web-data/search",
-                    params={"query": query}
-                )
-                
-                if response.status_code == 200:
-                    results = response.json()
-                    all_results.extend(results)
+                try:
+                    # Call the web data search endpoint
+                    response = await client.get(
+                        "http://localhost:8000/web-data/search",
+                        params={"query": query}
+                    )
+                    
+                    if response.status_code == 200:
+                        web_results = response.json()
+                        # Add source type to each result
+                        for result in web_results:
+                            result["source_type"] = "web"
+                        all_results.extend(web_results)
+                    else:
+                        # Log error and continue with empty results
+                        print(f"Error searching web data: {response.text}")
+                except Exception as e:
+                    print(f"Exception searching web data: {str(e)}")
+                    # Continue with empty results for this query
         
         # Update state
         state["web_data_results"] = all_results
