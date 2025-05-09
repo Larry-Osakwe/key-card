@@ -52,27 +52,31 @@ class SupportQueryGraph:
         # Create the graph
         graph = StateGraph(QueryState)
         
-        # Add nodes
-        graph.add_node("analyze_query", self.analyze_query)
+        # Add nodes for the different steps in our workflow
+        graph.add_node("classify_query", self.classify_query) 
+        graph.add_node("handle_simple_query", self.handle_simple_query)
         graph.add_node("rewrite_query", self.rewrite_query)
         graph.add_node("retrieve_data_from_both_sources", self.retrieve_data_from_both_sources)
         graph.add_node("generate_response", self.generate_response)
         graph.add_node("evaluate_response", self.evaluate_response)
         
-        # Add conditional edge after analysis to handle different query types
+        # Add conditional edge after classification to route based on query type
         graph.add_conditional_edges(
-            "analyze_query",
+            "classify_query",
             self.route_by_query_type,
             {
-                "greeting": "generate_response",  # Skip data retrieval for greetings
-                "complex": "rewrite_query"        # Full processing for complex queries
+                "simple": "handle_simple_query",    # Simple queries get fast responses
+                "complex": "rewrite_query"          # Complex queries go through full pipeline
             }
         )
         
-        # Add edges
+        # Add edges for the complex query path
         graph.add_edge("rewrite_query", "retrieve_data_from_both_sources")
         graph.add_edge("retrieve_data_from_both_sources", "generate_response")
         graph.add_edge("generate_response", "evaluate_response")
+        
+        # Simple queries skip evaluation and data retrieval
+        graph.add_edge("handle_simple_query", END)
         
         # Add conditional edge for refinement
         graph.add_conditional_edges(
@@ -85,82 +89,75 @@ class SupportQueryGraph:
         )
         
         # Set entry point
-        graph.set_entry_point("analyze_query")
+        graph.set_entry_point("classify_query")
         
         return graph.compile()
     
-    async def analyze_query(self, state: QueryState) -> QueryState:
-        """Analyze the user query to determine its type and characteristics"""
+    async def classify_query(self, state: QueryState) -> QueryState:
+        """Classify the user query to determine if it's simple or complex"""
         # Get the current query
         query = state["current_query"]
-        
-        # Simple pattern matching for greetings and casual messages
-        # This is faster than an LLM call for very simple cases
         query_lower = query.lower().strip()
         
-        # Check for greeting patterns
-        greeting_patterns = ["hi", "hello", "hey", "greetings", "howdy"]
-        is_simple_greeting = False
-        
-        # Check if it's a simple greeting (allowing for repeated characters like "hiii")
-        for pattern in greeting_patterns:
-            # Basic pattern: starts with greeting pattern
-            if query_lower.startswith(pattern):
-                remaining = query_lower[len(pattern):]
-                # Check if the rest is just repeated characters or punctuation
-                if not remaining or all(c in "!.?i " for c in remaining):
-                    is_simple_greeting = True
-                    break
-        
-        if is_simple_greeting:
-            state["query_type"] = "greeting"
-            return state
-            
-        # For slightly more complex queries, use the LLM to classify
-        if len(query.split()) <= 5:
-            # Use a simpler prompt for short queries to improve performance
-            classify_prompt = ChatPromptTemplate.from_messages([
-                ("system", "Classify this query as one of: greeting, question, command, statement, or other."),
-                ("user", "{query}")
-            ])
-            
-            response = self.llm.invoke(classify_prompt.format(query=query))
-            response_text = response.content.lower()
-            
-            # Extract query type from response
-            if "greeting" in response_text:
-                state["query_type"] = "greeting"
-            elif "question" in response_text:
-                state["query_type"] = "question"
-            elif "command" in response_text:
-                state["query_type"] = "command"
-            elif "statement" in response_text:
-                state["query_type"] = "statement"
-            else:
-                state["query_type"] = "other"
-                
-            return state
-            
-        # For more complex queries, perform a more detailed analysis
-        analyze_prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are an AI assistant that analyzes customer support queries. "
-                      "Classify the query type and determine key aspects of the query."),
+        # Use LLM to classify the query
+        classify_prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are an AI assistant that classifies customer support queries. " +
+                      "Your task is to determine if a query is 'simple' or 'complex'.\n\n" +
+                      "A 'simple' query is one that:\n" +
+                      "- Is a greeting (hi, hello, hey)\n" +
+                      "- Is a casual conversation (how are you, what's up)\n" +
+                      "- Is a basic acknowledgment (thanks, got it)\n" +
+                      "- Is a farewell (goodbye, bye)\n" +
+                      "- Does NOT require specific information retrieval\n" +
+                      "- Does NOT need to search documentation or databases\n\n" +
+                      "A 'complex' query is one that:\n" +
+                      "- Asks for specific information (how do I reset my password)\n" +
+                      "- Requires searching documentation or databases\n" +
+                      "- Needs technical details or step-by-step instructions\n" +
+                      "- Involves troubleshooting or problem-solving\n\n" +
+                      "Respond with ONLY 'simple' or 'complex'."),
             ("user", "{query}")
         ])
         
-        response = self.llm.invoke(analyze_prompt.format(query=query))
+        response = self.llm.invoke(classify_prompt.format(query=query))
+        response_text = response.content.lower().strip()
         
-        # Extract query type from response (simplified for example)
-        query_type = "general_inquiry"  # Default
-        if "reset" in query.lower() or "restart" in query.lower():
-            query_type = "troubleshooting"
-        elif "account" in query.lower() or "password" in query.lower():
-            query_type = "account_issue"
-        elif "billing" in query.lower() or "payment" in query.lower():
-            query_type = "billing_inquiry"
-            
-        # Update state
-        state["query_type"] = query_type
+        # Determine query type based on LLM response
+        if "simple" in response_text:
+            state["query_type"] = "simple"
+        else:
+            state["query_type"] = "complex"
+        
+        # Update state timestamp
+        state["updated_at"] = datetime.now().isoformat()
+        
+        return state
+        
+    async def handle_simple_query(self, state: QueryState) -> QueryState:
+        """Generate a response for a simple query without data retrieval"""
+        # Get the current query
+        query = state["current_query"]
+        query_lower = query.lower().strip()
+        
+        # Use a lightweight LLM call to generate an appropriate response
+        simple_prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are a helpful customer support assistant responding to a simple query. " +
+                      "This is a casual conversation that doesn't require technical information or documentation lookup. " +
+                      "Keep your response friendly, concise, and natural."),
+            ("user", "{query}")
+        ])
+        
+        response = self.llm.invoke(simple_prompt.format(query=query))
+        
+        # Update state with response and empty sources
+        state["response_content"] = response.content
+        state["selected_sources"] = []
+        
+        # Set scores for simple queries
+        state["keyword_score"] = 0.95
+        state["llm_score"] = 0.95
+        state["response_score"] = 0.95
+        state["needs_refinement"] = False
         state["updated_at"] = datetime.now().isoformat()
         
         return state
@@ -295,8 +292,8 @@ class SupportQueryGraph:
         query = state["current_query"]
         query_type = state.get("query_type", "")
         
-        # For greetings, we already set the response content in route_by_query_type
-        if query_type == "greeting" and state.get("response_content"):
+        # For greetings and simple queries, we already set the response content in route_by_query_type
+        if (query_type == "greeting" or query_type == "simple") and state.get("response_content"):
             # Set empty selected sources since we didn't retrieve any
             state["selected_sources"] = []
             return state
@@ -341,7 +338,6 @@ class SupportQueryGraph:
         # Get query, response, and sources
         query = state["current_query"]
         response_content = state["response_content"]
-        selected_sources = state["selected_sources"]
         
         # Simple keyword matching score
         query_keywords = set(query.lower().split())
@@ -392,16 +388,15 @@ class SupportQueryGraph:
             return "refine"
         return "complete"
     
-    def route_by_query_type(self, state: QueryState) -> Literal["greeting", "complex"]:
-        """Route the query based on its type"""
+    def route_by_query_type(self, state: QueryState) -> Literal["simple", "complex"]:
+        """Route the query based on its classification"""
         query_type = state.get("query_type", "")
         
-        if query_type == "greeting":
-            # For greetings, generate a standard response without data retrieval
-            state["response_content"] = "Hello! How can I assist you today? If you have a question, feel free to ask, and I'll do my best to help."
-            return "greeting"
-            
-        return "complex"
+        # Simple routing based on query classification
+        if query_type == "simple":
+            return "simple"
+        else:
+            return "complex"
     
     async def process(self, query: str, conversation_history: Optional[List[Dict]] = None) -> Dict[str, Any]:
         """Process a customer support query"""
@@ -425,25 +420,7 @@ class SupportQueryGraph:
             "updated_at": datetime.now().isoformat()
         }
         
-        # For very simple queries (1-2 words), bypass the graph and use a simplified flow
-        if len(query.strip().split()) <= 2 and not any(char in query for char in "?!.,:;"):
-            # Analyze query type
-            if query.lower() in ["hi", "hello", "hey", "greetings"]:
-                state["query_type"] = "greeting"
-                state["response_content"] = "Hello! How can I assist you today? If you have a question, feel free to ask, and I'll do my best to help."
-                return {
-                    "content": state["response_content"],
-                    "sources": [],
-                    "scores": {
-                        "overall": 0.9,
-                        "keyword": 0.9,
-                        "llm": 0.9
-                    },
-                    "refinements": 0,
-                    "success": True
-                }
-        
-        # Run the graph
+        # Run the graph - our new flow handles all query types through the graph
         final_state = await self.graph.ainvoke(state)
         
         # Return the results
@@ -451,9 +428,9 @@ class SupportQueryGraph:
             "content": final_state["response_content"],
             "sources": final_state["selected_sources"],
             "scores": {
-                "overall": final_state["response_score"],
-                "keyword": final_state["keyword_score"],
-                "llm": final_state["llm_score"]
+                "overall": final_state["response_score"] or 0.95,  # Default for simple queries
+                "keyword": final_state["keyword_score"] or 0.95,  # Default for simple queries
+                "llm": final_state["llm_score"] or 0.95  # Default for simple queries
             },
             "refinements": final_state["refinement_count"],
             "success": True
