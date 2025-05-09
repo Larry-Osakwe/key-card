@@ -97,9 +97,9 @@ export default function Home() {
       <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
         <header className="mb-6 md:mb-8">
           <h1 className="text-2xl md:text-3xl font-mono font-bold text-center text-slate-800 dark:text-slate-100 flex items-center justify-center uppercase">
-            <span className="text-blue-600 dark:text-blue-500">SUPPORT</span>
+            <span className="text-blue-600 dark:text-blue-500">TECH SUPPORT</span>
             <span className="mx-1">&nbsp;|&nbsp;</span>
-            <span>ASSISTANT</span>
+            <span>AI ASSISTANT</span>
           </h1>
           <div className="h-1 w-40 mx-auto mt-3 bg-blue-600 dark:bg-blue-500"></div>
           <p className="text-center text-slate-600 dark:text-slate-400 mt-4 uppercase text-sm tracking-wide font-mono">

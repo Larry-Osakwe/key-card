@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Info, BarChart } from 'lucide-react';
 import { Source, Score } from '@/types/conversation';
 import { SourcesList } from './SourcesList';
 import { ScoreDisplay } from './ScoreDisplay';
@@ -19,7 +18,6 @@ export function ResponseDetails({ sources, scores }: ResponseDetailsProps) {
 
   // Get the number of sources safely
   const sourceCount = sources?.length ?? 0;
-  const hasScores = !!scores;
 
   return (
     <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700">
