@@ -18,6 +18,8 @@ class QueryState(TypedDict):
     query_category: str                      # Detailed category (conversational/general_knowledge/product_specific)
     
     # MCP and data state
+    query_internal_docs: bool                # Whether to query internal docs
+    query_web_data: bool                     # Whether to query web data
     internal_docs_results: List[Dict]        # Results from internal docs
     web_data_results: List[Dict]            # Results from web data
     selected_sources: List[Dict]             # Selected sources for response
@@ -54,10 +56,11 @@ class SupportQueryGraph:
         graph = StateGraph(QueryState)
         
         # Add nodes for the different steps in our workflow
-        graph.add_node("classify_query", self.classify_query) 
-        graph.add_node("handle_simple_query", self.handle_simple_query)
-        graph.add_node("rewrite_query", self.rewrite_query)
-        graph.add_node("retrieve_data_from_both_sources", self.retrieve_data_from_both_sources)
+        graph.add_node("classify_query", self.classify_query)  # Dedicated classification node
+        graph.add_node("handle_simple_query", self.handle_simple_query)  # Node for simple queries
+        graph.add_node("rewrite_query", self.rewrite_query)  # Rewrite complex queries
+        graph.add_node("determine_data_sources", self.determine_data_sources)  # New node to select data sources
+        graph.add_node("retrieve_data_from_both_sources", self.retrieve_data_from_both_sources)  # Retrieve from selected sources
         graph.add_node("generate_response", self.generate_response)
         graph.add_node("evaluate_response", self.evaluate_response)
         
@@ -71,8 +74,9 @@ class SupportQueryGraph:
             }
         )
         
-        # Add edges for the complex query path
-        graph.add_edge("rewrite_query", "retrieve_data_from_both_sources")
+        # Add edges for the complex query path with dynamic source selection
+        graph.add_edge("rewrite_query", "determine_data_sources")  # First determine which sources to query
+        graph.add_edge("determine_data_sources", "retrieve_data_from_both_sources")  # Then retrieve from selected sources
         graph.add_edge("retrieve_data_from_both_sources", "generate_response")
         graph.add_edge("generate_response", "evaluate_response")
         
@@ -207,12 +211,52 @@ class SupportQueryGraph:
         
         return state
     
-    async def retrieve_data_from_both_sources(self, state: QueryState) -> QueryState:
-        """Retrieve data from both internal docs and web data in parallel"""
-        # Get sub-queries
-        sub_queries = state["sub_queries"]
+    async def determine_data_sources(self, state: QueryState) -> QueryState:
+        """Determine which data sources to query based on the query type and content"""
+        query = state["current_query"]
+        query_category = state.get("query_category", "")
         
-        # Create tasks for both data sources to run in parallel
+        # Use LLM to analyze if this query likely needs internal docs, web data, or both
+        source_prompt = ChatPromptTemplate.from_messages([
+            ("system", "You are an AI assistant that determines the appropriate data source for a query.\n\n"
+                      "For queries about product-specific features, technical details, company policies, "
+                      "or internal procedures, choose 'internal_docs'.\n\n"
+                      "For queries about industry trends, third-party comparisons, general knowledge, "
+                      "or information likely found on the web, choose 'web_data'.\n\n"
+                      "If the query might need both sources, choose 'both'.\n\n"
+                      "Respond with ONLY one of: 'internal_docs', 'web_data', or 'both'."),
+            ("user", "{query}")
+        ])
+        
+        response = self.llm.invoke(source_prompt.format(query=query))
+        source_decision = response.content.lower().strip()
+        
+        # Set the data sources to query
+        if "internal_docs" in source_decision or "both" in source_decision:
+            state["query_internal_docs"] = True
+        else:
+            state["query_internal_docs"] = False
+            
+        if "web_data" in source_decision or "both" in source_decision:
+            state["query_web_data"] = True
+        else:
+            state["query_web_data"] = False
+        
+        # Log the decision for debugging
+        print(f"Data source decision for query '{query[:50]}...': {source_decision}")
+        print(f"Will query internal docs: {state['query_internal_docs']}")
+        print(f"Will query web data: {state['query_web_data']}")
+        
+        return state
+    
+    async def retrieve_data_from_both_sources(self, state: QueryState) -> QueryState:
+        """Retrieve data from the selected sources based on query analysis"""
+        # Get sub-queries and source decisions
+        sub_queries = state["sub_queries"]
+        query_internal = state.get("query_internal_docs", True)  # Default to True for backward compatibility
+        query_web = state.get("query_web_data", True)  # Default to True for backward compatibility
+        
+        # Helper functions for data retrieval
         async def fetch_internal_docs():
             results = []
             for query in sub_queries:
@@ -281,21 +325,40 @@ class SupportQueryGraph:
                     print(f"Exception searching web data: {str(e)}")
             return results
         
-        # Run both tasks in parallel
-        internal_docs_task = asyncio.create_task(fetch_internal_docs())
-        web_data_task = asyncio.create_task(fetch_web_data())
+        # Create tasks only for the selected sources
+        tasks = []
+        task_names = []
         
-        # Wait for both tasks to complete
-        internal_docs_results, web_data_results = await asyncio.gather(
-            internal_docs_task, 
-            web_data_task
-        )
+        if query_internal:
+            tasks.append(asyncio.create_task(fetch_internal_docs()))
+            task_names.append("internal_docs")
+        else:
+            # Empty results if not querying this source
+            state["internal_docs_results"] = []
         
-        # Update state with results from both sources
-        state["internal_docs_results"] = internal_docs_results
-        state["web_data_results"] = web_data_results
+        if query_web:
+            tasks.append(asyncio.create_task(fetch_web_data()))
+            task_names.append("web_data")
+        else:
+            # Empty results if not querying this source
+            state["web_data_results"] = []
+        
+        # Run tasks in parallel (if any)
+        if tasks:
+            results = await asyncio.gather(*tasks)
+            
+            # Update state with results based on which tasks were run
+            for i, task_name in enumerate(task_names):
+                if task_name == "internal_docs":
+                    state["internal_docs_results"] = results[i]
+                elif task_name == "web_data":
+                    state["web_data_results"] = results[i]
+        
+        # Log the results
+        print(f"Retrieved {len(state.get('internal_docs_results', []))} internal docs results")
+        print(f"Retrieved {len(state.get('web_data_results', []))} web data results")
+        
         state["updated_at"] = datetime.now().isoformat()
-        
         return state
     
     async def generate_response(self, state: QueryState) -> QueryState:
@@ -418,7 +481,9 @@ class SupportQueryGraph:
             "current_query": query,
             "sub_queries": [query],
             "query_type": "",
-            "query_category": "",  # Initialize the new field
+            "query_category": "",
+            "query_internal_docs": True,  # Default to True, will be updated by determine_data_sources
+            "query_web_data": True,      # Default to True, will be updated by determine_data_sources
             "internal_docs_results": [],
             "web_data_results": [],
             "selected_sources": [],

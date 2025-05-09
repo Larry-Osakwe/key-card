@@ -126,19 +126,37 @@ The system uses two Model Context Protocol (MCP) servers:
 1. **Internal Documentation Server**: Contains company-specific documentation, product guides, and technical information
 2. **Web Data Server**: Contains publicly available information from the web
 
-Both servers are queried in parallel for complex queries, and the most relevant sources are selected for response generation.
+#### Dynamic Data Source Selection
+
+A key feature of our implementation is the dynamic selection of data sources based on query content:
+
+1. **Query Analysis**: The system analyzes each query to determine which data source(s) would be most appropriate
+   - Product-specific queries (e.g., "How do I reset my device?") → Internal documentation
+   - General knowledge queries (e.g., "What's the best router for home use?") → Web data
+   - Complex queries that might need both → Both sources
+
+2. **Selective Retrieval**: Only the selected data sources are queried, improving efficiency
+   - Reduces unnecessary API calls
+   - Focuses on the most relevant information sources
+   - Prioritizes authoritative sources for product-specific information
+
+3. **Source Attribution**: Responses clearly indicate which sources were used, maintaining transparency
 
 ## Optimization Techniques
 
 The system has been optimized for both performance and accuracy:
 
-1. **Intelligent Query Routing**: By classifying queries early in the process, we avoid unnecessary data retrieval and LLM calls for simple queries
+1. **Intelligent Query Classification**: By classifying queries early in the process, we avoid unnecessary data retrieval and LLM calls for simple queries
 
-2. **Parallel Data Retrieval**: Internal documentation and web data are retrieved simultaneously to reduce latency
+2. **Dynamic Data Source Selection**: The system analyzes each query to determine which data source(s) to query, avoiding unnecessary API calls
 
-3. **Response Quality Evaluation**: Responses are evaluated for quality and can be refined if necessary
+3. **Parallel Data Retrieval**: When multiple data sources are needed, they are retrieved simultaneously to reduce latency
 
-4. **Contextual Response Generation**: Different prompts are used based on query type to generate more appropriate responses
+4. **Response Quality Evaluation**: Responses are evaluated using both keyword matching and LLM evaluation
+
+5. **Refinement Loop**: If a response doesn't meet quality thresholds, the system automatically rewrites the query and tries again
+
+6. **Contextual Response Generation**: Different prompts are used based on query type to generate more appropriate responses
 
 ## Tech Stack
 
@@ -155,6 +173,20 @@ The system has been optimized for both performance and accuracy:
 - [FastMCP](https://github.com/anthropics/FastMCP) - Model Context Protocol server implementation
 - [LangChain](https://langchain.com) - Building applications with LLMs
 - [OpenAI](https://openai.com) - GPT-4o API for text generation
+
+### Why LangGraph?
+
+We chose LangGraph over alternatives like LlamaIndex for several key reasons:
+
+1. **Flow-Based Architecture**: LangGraph provides a structured, graph-based approach to building AI applications, which is ideal for our multi-step query processing pipeline.
+
+2. **State Management**: LangGraph has excellent state management capabilities, making it easier to track and update the conversation state throughout the process.
+
+3. **Conditional Edges**: The ability to have conditional edges in LangGraph (like our `route_by_query_type` and `should_refine` functions) makes it perfect for implementing dynamic routing and feedback loops.
+
+4. **Integration with LangChain**: LangGraph builds on LangChain, providing access to a wide range of tools and integrations.
+
+5. **Modern Approach**: LangGraph represents a more modern approach to building stateful AI applications with clear separation of concerns.
 
 ## Learn More
 
