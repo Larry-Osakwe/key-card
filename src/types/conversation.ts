@@ -41,4 +41,6 @@ export interface SupportResponse {
   sources?: Source[];
   scores?: Score;
   success: boolean;
+  session_id?: string;
+  refinements?: number;
 } 

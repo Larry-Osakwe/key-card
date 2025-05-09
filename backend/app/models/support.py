@@ -27,6 +27,27 @@ class QueryRequest(BaseModel):
     query: str
     previous_messages: Optional[List[Dict[str, Any]]] = None
 
+class Score(BaseModel):
+    """Model for response evaluation scores"""
+    overall: float
+    keyword: float
+    llm: float
+
+class ChatMessage(BaseModel):
+    """Model for chat message requests"""
+    message: str
+    previous_content: Optional[str] = None
+    session_id: Optional[str] = None
+
+class ChatResponse(BaseModel):
+    """Model for chat responses"""
+    content: str
+    sources: List[SearchResult] = []
+    scores: Score
+    refinements: int = 0
+    success: bool = True
+    session_id: Optional[str] = None
+
 class QueryResponse(BaseModel):
     """Model for customer support query responses"""
     content: str
