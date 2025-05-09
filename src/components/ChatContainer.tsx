@@ -30,17 +30,15 @@ export function ChatContainer({ messages, isAnalyzing = false, onSendMessage }: 
   
   return (
     <Card 
-      className={`w-full h-[calc(100vh-160px)] max-w-4xl mx-auto flex flex-col overflow-hidden shadow-lg transition-all duration-300 ${isHovered ? 'shadow-xl scale-[1.005]' : 'shadow-md'} border-slate-200 dark:border-slate-700`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="w-full h-[calc(100vh-160px)] max-w-4xl mx-auto flex flex-col overflow-hidden border-blue-600 dark:border-blue-500 border-[1px] bg-slate-50 dark:bg-slate-900"
     >
-      <div className="bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700 px-4 py-3 flex items-center">
-        <div className={`mr-2 p-1.5 rounded-full transition-colors ${isHovered ? 'bg-gradient-to-br from-indigo-100 to-red-100 dark:from-indigo-900/30 dark:to-red-900/20' : ''}`}>
-          <MessageSquare className="h-5 w-5 text-red-500 dark:text-red-400" />
+      <div className="bg-slate-100 dark:bg-slate-800 border-b border-blue-600 dark:border-blue-500 px-4 py-3 flex items-center">
+        <div className="mr-2 p-1.5">
+          <MessageSquare className="h-5 w-5 text-blue-600 dark:text-blue-500" />
         </div>
-        <h2 className="font-semibold text-slate-700 dark:text-slate-200">Conversation</h2>
-        <div className="ml-auto text-xs text-slate-500 dark:text-slate-400">
-          {messages.length > 0 ? `${messages.length} message${messages.length === 1 ? '' : 's'}` : 'No messages yet'}
+        <h2 className="font-mono uppercase text-slate-800 dark:text-slate-200">CONVERSATION</h2>
+        <div className="ml-auto text-xs font-mono text-slate-600 dark:text-slate-400">
+          {messages.length > 0 ? `[MESSAGES: ${messages.length}]` : '[NO MESSAGES]'}
         </div>
       </div>
       

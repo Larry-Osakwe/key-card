@@ -93,17 +93,17 @@ export default function Home() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+    <main className="min-h-screen bg-slate-50 dark:bg-slate-900">
       <div className="container mx-auto p-4 md:p-6 lg:p-8 min-h-screen">
         <header className="mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-center text-slate-800 dark:text-slate-100 flex items-center justify-center">
-            <span className="text-blue-600 dark:text-blue-500">Support</span>
+          <h1 className="text-2xl md:text-3xl font-mono font-bold text-center text-slate-800 dark:text-slate-100 flex items-center justify-center uppercase">
+            <span className="text-blue-600 dark:text-blue-500">SUPPORT</span>
             <span className="mx-1">&nbsp;|&nbsp;</span>
-            <span>Assistant</span>
+            <span>ASSISTANT</span>
           </h1>
-          <div className="h-1 w-40 mx-auto mt-3 bg-gradient-to-r from-blue-500 via-indigo-600 to-blue-500 rounded-full"></div>
-          <p className="text-center text-slate-600 dark:text-slate-400 mt-4">
-            Get answers to your support questions with verified sources
+          <div className="h-1 w-40 mx-auto mt-3 bg-blue-600 dark:bg-blue-500"></div>
+          <p className="text-center text-slate-600 dark:text-slate-400 mt-4 uppercase text-sm tracking-wide font-mono">
+            [STATUS: ONLINE] Get answers with verified sources
           </p>
         </header>
 

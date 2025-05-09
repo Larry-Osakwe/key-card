@@ -32,14 +32,14 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
     <div className="space-y-6 p-4 md:p-6">
       {messages.length === 0 && (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="p-3 bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/20 rounded-full mb-4 shadow-inner">
-            <Info className="h-8 w-8 text-blue-500 dark:text-blue-400" />
+          <div className="p-3 bg-blue-600 dark:bg-blue-800 mb-4">
+            <Info className="h-8 w-8 text-white" />
           </div>
-          <h3 className="text-lg font-medium text-slate-800 dark:text-slate-200 mb-2">
-            Welcome to <span className="text-blue-600 dark:text-blue-400 font-semibold">Support Assistant</span>
+          <h3 className="text-lg font-mono uppercase text-slate-800 dark:text-slate-200 mb-2">
+            WELCOME TO <span className="text-blue-600 dark:text-blue-500">KEYCARD SUPPORT</span>
           </h3>
-          <p className="text-sm text-slate-600 dark:text-slate-400 max-w-md">
-            Ask me any customer support question to get started. I'll provide answers with verified sources.
+          <p className="text-sm font-mono text-slate-600 dark:text-slate-400 max-w-md">
+            [READY] ASK ANY SUPPORT QUESTION TO BEGIN
           </p>
         </div>
       )}
@@ -48,15 +48,15 @@ export function MessageList({ messages, isAnalyzing = false }: MessageListProps)
         <div key={message.id} className={`animate-fadeIn opacity-0 animation-delay-${index % 5}`}>
           <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             {message.role === 'assistant' && (
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/20 flex items-center justify-center mr-3 mt-1 shadow-inner">
-                <Bot className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+              <div className="h-8 w-8 bg-blue-600 dark:bg-blue-800 flex items-center justify-center mr-3 mt-1">
+                <Bot className="h-5 w-5 text-white" />
               </div>
             )}
             
-            <div className={`max-w-[85%] px-4 py-3 rounded-lg shadow-sm border ${
+            <div className={`max-w-[80%] px-4 py-3 ${
               message.role === 'user' 
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-500 rounded-tr-none' 
-                : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-tl-none'
+                ? 'bg-blue-600 text-white border-[1px] border-blue-700' 
+                : 'bg-slate-100 dark:bg-slate-800 border-[1px] border-slate-300 dark:border-slate-700'
             }`}>
               
               {message.role === 'user' ? (

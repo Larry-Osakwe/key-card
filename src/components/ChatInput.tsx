@@ -23,32 +23,22 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="p-4 border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
-      {isFocused && (
-        <div className="flex items-center text-xs text-blue-600 dark:text-blue-400 mb-2 animate-fadeIn">
-          <Lightbulb className="h-3 w-3 mr-1" />
-          <span>Try asking about account issues, billing questions, or device troubleshooting</span>
-        </div>
-      )}
-      <div className="flex gap-2">
-        <Input
-          placeholder="Type your message..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          disabled={disabled}
-          className="flex-1 border-slate-300 dark:border-slate-600 focus-visible:ring-red-500 shadow-sm transition-shadow"
-        />
-        <Button 
-          type="submit" 
-          disabled={disabled || !input.trim()} 
-          className={`bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white transition-all ${!input.trim() ? 'opacity-70' : 'opacity-100'}`}
-        >
-          <SendHorizontal className="h-5 w-5" />
-          <span className="sr-only">Send message</span>
-        </Button>
-      </div>
+    <form onSubmit={handleSubmit} className="flex border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3">
+      <Input
+        placeholder="TYPE YOUR MESSAGE..."
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        onKeyDown={(e) => e.key === 'Enter' && handleSubmit(e)}
+        disabled={disabled}
+        className="flex-1 bg-white dark:bg-slate-900 border-blue-600 dark:border-blue-500 font-mono rounded-none focus-visible:ring-0 focus-visible:ring-offset-0"
+      />
+      <Button 
+        type="submit" 
+        disabled={disabled || !input.trim()} 
+        className="ml-2 bg-blue-600 hover:bg-blue-700 text-white rounded-none font-mono"
+      >
+        {disabled ? 'SENDING...' : 'SEND'}
+      </Button>
     </form>
   );
 } 
