@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "GitHub PR Analyzer",
-  description: "Analyze GitHub Pull Requests with AI",
+  title: "Customer Support Query System",
+  description: "Analyze customer support queries with AI",
 };
 
 export default function RootLayout({

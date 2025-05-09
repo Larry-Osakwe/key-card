@@ -43,7 +43,6 @@ The project is organized as a monorepo with two main components:
 
 - Node.js 16+ and npm
 - Python 3.9+
-- GitHub API token (optional but recommended)
 - OpenAI API key (required)
 
 ### Setup Environment Variables
