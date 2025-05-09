@@ -14,7 +14,8 @@ class QueryState(TypedDict):
     messages: Annotated[List[Dict[str, Any]], "add_messages"]  # Chat history
     current_query: str                       # Raw user query
     sub_queries: List[str]                   # Decomposed queries
-    query_type: str                          # Classification of query
+    query_type: str                          # Classification of query (simple/complex)
+    query_category: str                      # Detailed category (conversational/general_knowledge/product_specific)
     
     # MCP and data state
     internal_docs_results: List[Dict]        # Results from internal docs
@@ -94,39 +95,38 @@ class SupportQueryGraph:
         return graph.compile()
     
     async def classify_query(self, state: QueryState) -> QueryState:
-        """Classify the user query to determine if it's simple or complex"""
+        """Classify the user query to determine its type and appropriate handling path"""
         # Get the current query
         query = state["current_query"]
         query_lower = query.lower().strip()
         
-        # Use LLM to classify the query
+        # Use LLM to classify the query into more specific categories
         classify_prompt = ChatPromptTemplate.from_messages([
             ("system", "You are an AI assistant that classifies customer support queries. " +
-                      "Your task is to determine if a query is 'simple' or 'complex'.\n\n" +
-                      "A 'simple' query is one that:\n" +
-                      "- Is a greeting (hi, hello, hey)\n" +
-                      "- Is a casual conversation (how are you, what's up)\n" +
-                      "- Is a basic acknowledgment (thanks, got it)\n" +
-                      "- Is a farewell (goodbye, bye)\n" +
-                      "- Does NOT require specific information retrieval\n" +
-                      "- Does NOT need to search documentation or databases\n\n" +
-                      "A 'complex' query is one that:\n" +
-                      "- Asks for specific information (how do I reset my password)\n" +
-                      "- Requires searching documentation or databases\n" +
-                      "- Needs technical details or step-by-step instructions\n" +
-                      "- Involves troubleshooting or problem-solving\n\n" +
-                      "Respond with ONLY 'simple' or 'complex'."),
+                      "Your task is to determine the query type. Classify as ONE of these categories:\n\n" +
+                      "1. 'conversational': Simple greetings, acknowledgments, or casual conversation\n" +
+                      "   Examples: 'hello', 'thanks', 'how are you', 'goodbye'\n\n" +
+                      "2. 'general_knowledge': Questions about general facts that don't require product documentation\n" +
+                      "   Examples: 'what's the capital of California', 'who invented the telephone', 'what's 15 * 7'\n\n" +
+                      "3. 'product_specific': Questions that require searching product documentation or databases\n" +
+                      "   Examples: 'how do I reset my password', 'what are the billing options', 'troubleshoot login issues'\n\n" +
+                      "Respond with EXACTLY ONE word: 'conversational', 'general_knowledge', or 'product_specific'."),
             ("user", "{query}")
         ])
         
         response = self.llm.invoke(classify_prompt.format(query=query))
         response_text = response.content.lower().strip()
         
-        # Determine query type based on LLM response
-        if "simple" in response_text:
+        # Map the detailed classification to our routing categories
+        if "conversational" in response_text:
             state["query_type"] = "simple"
+            state["query_category"] = "conversational"
+        elif "general_knowledge" in response_text:
+            state["query_type"] = "simple"
+            state["query_category"] = "general_knowledge"
         else:
             state["query_type"] = "complex"
+            state["query_category"] = "product_specific"
         
         # Update state timestamp
         state["updated_at"] = datetime.now().isoformat()
@@ -135,19 +135,31 @@ class SupportQueryGraph:
         
     async def handle_simple_query(self, state: QueryState) -> QueryState:
         """Generate a response for a simple query without data retrieval"""
-        # Get the current query
+        # Get the current query and category
         query = state["current_query"]
-        query_lower = query.lower().strip()
+        query_category = state.get("query_category", "conversational")
         
-        # Use a lightweight LLM call to generate an appropriate response
-        simple_prompt = ChatPromptTemplate.from_messages([
-            ("system", "You are a helpful customer support assistant responding to a simple query. " +
-                      "This is a casual conversation that doesn't require technical information or documentation lookup. " +
-                      "Keep your response friendly, concise, and natural."),
-            ("user", "{query}")
-        ])
+        # Different prompts based on query category
+        if query_category == "general_knowledge":
+            # For general knowledge questions, instruct the LLM to answer directly
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", "You are a helpful customer support assistant. " +
+                          "This question is asking for general knowledge that doesn't require product documentation. " +
+                          "Answer directly and concisely using your own knowledge. " +
+                          "If you're not sure, be honest about limitations."),
+                ("user", "{query}")
+            ])
+        else:  # conversational
+            # For conversational queries, keep it friendly and simple
+            prompt = ChatPromptTemplate.from_messages([
+                ("system", "You are a helpful customer support assistant responding to a conversational message. " +
+                          "This is a casual conversation that doesn't require technical information. " +
+                          "Keep your response friendly, concise, and natural."),
+                ("user", "{query}")
+            ])
         
-        response = self.llm.invoke(simple_prompt.format(query=query))
+        # Generate the response
+        response = self.llm.invoke(prompt.format(query=query))
         
         # Update state with response and empty sources
         state["response_content"] = response.content
@@ -406,6 +418,7 @@ class SupportQueryGraph:
             "current_query": query,
             "sub_queries": [query],
             "query_type": "",
+            "query_category": "",  # Initialize the new field
             "internal_docs_results": [],
             "web_data_results": [],
             "selected_sources": [],
