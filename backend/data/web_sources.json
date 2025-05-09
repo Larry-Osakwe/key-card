@@ -1,0 +1,62 @@
+[
+  {
+    "title": "Official Support: How to Reset Your Device",
+    "url": "https://support.example.com/device-reset",
+    "snippet": "Official guide for resetting your device. Learn how to perform soft resets, hard resets, and factory resets safely. Includes troubleshooting for common reset problems and recovery options if your device won't start after a reset."
+  },
+  {
+    "title": "Community Forum: Reset Solutions That Actually Work",
+    "url": "https://community.example.com/forums/thread/238791",
+    "snippet": "Users share their experiences with device resets. 'The 10-second power button hold didn't work for me, but I found that disconnecting the battery for 30 seconds fixed my issue.' Includes alternative reset methods not found in the official documentation."
+  },
+  {
+    "title": "Tech Blog: Why You Should Reset Your Device Monthly",
+    "url": "https://techblog.example.com/monthly-reset-benefits",
+    "snippet": "Regular device resets can improve performance and battery life. This article explains the science behind why periodic resets clear cache buildup and resolve memory leaks that slow down your device over time."
+  },
+  {
+    "title": "Video Tutorial: Complete Guide to Account Recovery",
+    "url": "https://videos.example.com/watch?v=account-recovery-guide",
+    "snippet": "Step-by-step video walkthrough of the account recovery process. Covers forgotten passwords, locked accounts, two-factor authentication issues, and how to contact support if automatic recovery methods fail."
+  },
+  {
+    "title": "Security Blog: Protecting Your Account from Hackers",
+    "url": "https://security.example.com/account-protection-guide",
+    "snippet": "Learn how to secure your account with strong passwords, two-factor authentication, and regular security audits. Includes warning signs that your account may have been compromised and immediate steps to take if you suspect unauthorized access."
+  },
+  {
+    "title": "Help Center: Troubleshooting Wi-Fi Connection Problems",
+    "url": "https://help.example.com/wifi-troubleshooting",
+    "snippet": "Comprehensive guide to diagnosing and fixing Wi-Fi connectivity issues. Covers router problems, device settings, interference from other devices, and how to optimize your network for better performance and reliability."
+  },
+  {
+    "title": "Expert Review: Best Wi-Fi Routers for Reliable Connections",
+    "url": "https://reviews.example.com/best-wifi-routers-2025",
+    "snippet": "If you're experiencing persistent connection issues, it might be time for a router upgrade. Our experts tested 20 popular models to find the most reliable options for different home sizes and usage patterns."
+  },
+  {
+    "title": "Mobile Carrier Guide: Fixing Data Connection Issues",
+    "url": "https://carrier.example.com/data-troubleshooting",
+    "snippet": "Official guide from mobile carriers on resolving data connectivity problems. Includes APN settings, network mode selection, and how to diagnose if the issue is with your account, device, or the network itself."
+  },
+  {
+    "title": "Battery University: Extending Your Device's Battery Life",
+    "url": "https://batteryuniversity.com/device-optimization",
+    "snippet": "Scientific approach to maximizing battery life and health. Learn about charge cycles, optimal charging patterns, temperature effects, and how different usage patterns affect long-term battery performance."
+  },
+  {
+    "title": "Accessibility Forum: Screen Reader Tips and Tricks",
+    "url": "https://accessibility.example.com/screen-reader-advanced",
+    "snippet": "Power users share advanced techniques for getting the most out of your device's screen reader. Includes custom gestures, voice commands, and settings adjustments that aren't covered in the basic documentation."
+  },
+  {
+    "title": "Developer Blog: Understanding Software Update Cycles",
+    "url": "https://dev.example.com/software-update-explained",
+    "snippet": "Behind-the-scenes look at how software updates are developed, tested, and rolled out. Explains why some devices get updates before others and what to do if an update causes problems with your device."
+  },
+  {
+    "title": "Data Recovery Specialists: Recovering Lost Files After Reset",
+    "url": "https://datarecovery.example.com/post-reset-recovery",
+    "snippet": "Professional advice on recovering data that was lost during a device reset. Covers both cloud backup restoration and specialized recovery techniques for when standard backups aren't available."
+  }
+]

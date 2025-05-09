@@ -1,0 +1,37 @@
+[
+  {
+    "title": "Device Reset Guide",
+    "content": "# Device Reset Guide\n\nFollow these steps to reset your device:\n\n## Soft Reset\n1. Power off the device by holding the power button for 3 seconds\n2. Wait 10 seconds\n3. Power on the device\n\n## Hard Reset\n1. Power off the device\n2. Hold the power button AND volume down button simultaneously for 10 seconds\n3. Release both buttons when you see the reset screen\n4. Select 'Factory Reset' using volume buttons and confirm with power button\n\n## Network Reset\n1. Go to Settings > System > Reset Options\n2. Select 'Reset Wi-Fi, mobile & Bluetooth'\n3. Tap 'Reset Settings' and confirm\n\nNote: A hard reset will erase all data on your device. Make sure to back up important information before proceeding.",
+    "url": "/docs/device-reset"
+  },
+  {
+    "title": "Account Management",
+    "content": "# Account Management\n\n## Password Reset\n1. Visit the account settings page at account.example.com\n2. Click on 'Forgot Password'\n3. Enter your email address\n4. Follow the instructions sent to your email\n\n## Two-Factor Authentication\n1. Log in to your account\n2. Go to Security Settings\n3. Enable Two-Factor Authentication\n4. Choose your preferred method (SMS, Authenticator App, or Email)\n5. Follow the setup instructions\n\n## Account Recovery\nIf you've lost access to your account:\n1. Visit account.example.com/recovery\n2. Provide your username or email\n3. Verify your identity using one of the recovery methods you set up previously\n4. Create a new password\n\nFor additional help, contact support at support@example.com",
+    "url": "/docs/account-management"
+  },
+  {
+    "title": "Troubleshooting Connection Issues",
+    "content": "# Troubleshooting Connection Issues\n\n## Wi-Fi Problems\n1. Restart your router by unplugging it for 30 seconds, then plugging it back in\n2. Make sure your device is within range of the Wi-Fi signal\n3. Forget the network on your device and reconnect\n4. Check if other devices can connect to the same network\n5. Reset network settings on your device\n\n## Bluetooth Connectivity\n1. Make sure Bluetooth is enabled on both devices\n2. Ensure the devices are within 30 feet of each other\n3. Restart Bluetooth on both devices\n4. Remove the device from paired devices and pair again\n5. Update your device firmware\n\n## Mobile Data Issues\n1. Toggle Airplane mode on and off\n2. Check if you have an active data plan\n3. Verify that data roaming is enabled if you're traveling\n4. Reset network settings\n5. Contact your carrier if problems persist",
+    "url": "/docs/connectivity"
+  },
+  {
+    "title": "Battery Optimization Guide",
+    "content": "# Battery Optimization Guide\n\n## Extend Battery Life\n1. Reduce screen brightness\n2. Turn off background app refresh for unused apps\n3. Enable battery saver mode\n4. Disable location services when not needed\n5. Close unused apps running in the background\n\n## Charging Best Practices\n1. Use the original charger or certified alternatives\n2. Avoid letting battery drain completely\n3. Don't leave device plugged in at 100% for extended periods\n4. Keep device cool while charging\n5. Avoid using device while charging for faster charge times\n\n## Battery Health\n1. Check battery health in Settings > Battery > Battery Health\n2. Replace battery if health is below 80%\n3. Calibrate battery occasionally by fully charging then fully discharging\n4. Update device software regularly\n5. Avoid extreme temperatures",
+    "url": "/docs/battery-optimization"
+  },
+  {
+    "title": "Software Update Procedures",
+    "content": "# Software Update Procedures\n\n## Checking for Updates\n1. Go to Settings > System > Software Update\n2. Tap 'Check for Updates'\n3. If an update is available, tap 'Download and Install'\n\n## Update Requirements\n1. Ensure device has at least 50% battery or is connected to power\n2. Connect to Wi-Fi network (recommended for large updates)\n3. Have at least 1GB of free storage space\n4. Back up important data before updating\n\n## Troubleshooting Failed Updates\n1. Restart your device and try again\n2. Clear cache in recovery mode\n3. Check for sufficient storage space\n4. Try updating via desktop companion app\n5. Contact support if problems persist\n\n## Beta Program\nTo join the beta program for early access to new features:\n1. Visit beta.example.com\n2. Register your device\n3. Follow enrollment instructions\n4. Provide feedback on new features",
+    "url": "/docs/software-updates"
+  },
+  {
+    "title": "Data Backup and Recovery",
+    "content": "# Data Backup and Recovery\n\n## Automatic Backups\n1. Go to Settings > System > Backup\n2. Enable 'Auto Backup'\n3. Select which data to include (Photos, Messages, Settings, etc.)\n4. Choose backup frequency\n5. Select storage location (Cloud or Local)\n\n## Manual Backup\n1. Connect device to computer\n2. Open device management software\n3. Select 'Backup Now'\n4. Choose backup location\n5. Wait for backup to complete\n\n## Restoring from Backup\n1. During device setup, select 'Restore from Backup'\n2. Sign in to your account\n3. Select the backup to restore from\n4. Wait for restoration to complete\n5. Verify all data has been restored\n\n## Cloud Sync Settings\nManage which data syncs to the cloud:\n1. Go to Settings > Accounts > Cloud Sync\n2. Toggle on/off for different data types\n3. Manage storage quota\n4. Set sync frequency",
+    "url": "/docs/backup-recovery"
+  },
+  {
+    "title": "Accessibility Features",
+    "content": "# Accessibility Features\n\n## Screen Reader\n1. Go to Settings > Accessibility > Screen Reader\n2. Toggle Screen Reader on\n3. Use three-finger tap to activate/deactivate\n4. Swipe left/right to navigate between items\n5. Double-tap to select an item\n\n## Voice Control\n1. Go to Settings > Accessibility > Voice Control\n2. Toggle Voice Control on\n3. Set up voice commands\n4. Use 'Hey Device' wake word to activate\n5. Speak commands clearly\n\n## Display Accommodations\n1. Adjust text size in Settings > Display > Text Size\n2. Enable high contrast mode for better visibility\n3. Use color filters for color blindness\n4. Enable reduce motion to minimize animations\n5. Adjust screen timeout duration\n\n## Hearing Accommodations\n1. Enable closed captions\n2. Adjust audio balance\n3. Set up visual alerts for notifications\n4. Connect hearing aids via Bluetooth\n5. Enable mono audio",
+    "url": "/docs/accessibility"
+  }
+]

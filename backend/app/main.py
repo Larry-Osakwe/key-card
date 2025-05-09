@@ -1,10 +1,11 @@
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any, Optional
 import os
 import json
 import logging
 from dotenv import load_dotenv
+from .routers import chat
+from .services.mcp.server_runner import setup_mcp_servers
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -13,7 +14,6 @@ logger = logging.getLogger(__name__)
 # Load environment variables from .env file
 load_dotenv()
 
-# Use relative import to work with uvicorn correctly
 from .models.message import Message
 from .services.github import PRAnalyzer, GitHubServiceError
 from .services.langgrapher import PRAnalysisGraph
@@ -22,8 +22,6 @@ app = FastAPI(title="GitHub PR Analyzer API")
 
 # Configure CORS
 origins = [
-    "https://a-ai-assist.vercel.app",           # Production Vercel URL
-    "https://a-ai-assist-qp8m9umsy-larry-osakwes-projects.vercel.app",  # Preview deployment URL
     "http://localhost:3000",                    # Local development
 ]
 
@@ -34,6 +32,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Set up MCP servers
+setup_mcp_servers(app)
 
 # Create dependency for PR Analyzer with API key
 def get_pr_analyzer():
