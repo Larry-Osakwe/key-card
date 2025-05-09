@@ -5,7 +5,7 @@ from .web_data import web_data_mcp
 def setup_mcp_servers(app: FastAPI):
     """Set up MCP servers as FastAPI endpoints"""
     # Create a simple router for internal docs MCP server
-    @app.post("/internal-docs/search")
+    @app.get("/internal-docs/search")
     async def search_internal_docs(query: str):
         """Search internal documentation"""
         from fastmcp import Client
@@ -15,7 +15,7 @@ def setup_mcp_servers(app: FastAPI):
             return results
     
     # Create a simple router for web data MCP server
-    @app.post("/web-data/search")
+    @app.get("/web-data/search")
     async def search_web_data(query: str):
         """Search web data"""
         from fastmcp import Client
