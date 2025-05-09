@@ -1,13 +1,14 @@
-# GitHub PR Analyzer
+# Customer Support Query System
 
-A full-stack application for analyzing GitHub Pull Requests using AI. This project includes a Next.js frontend and a Python FastAPI backend with LangGraph-powered analysis.
+A full-stack application for answering customer support queries using AI. This project includes a Next.js frontend and a Python FastAPI backend with LangGraph and MCP servers for intelligent data retrieval and response generation.
 
 ## Project Overview
 
 This application enables users to:
-- Submit GitHub Pull Request URLs for AI-powered analysis
-- Receive detailed insights about PR changes, potential issues, and improvements
-- Chat with the AI assistant about software development and code review topics
+- Submit customer support queries through a chat interface
+- Receive accurate responses with verified sources
+- View confidence scores and source references for each response
+- Experience an intelligent system that can handle various query types
 
 ## Project Structure
 
@@ -27,7 +28,7 @@ The project is organized as a monorepo with two main components:
 │   │   ├── models/      # Data models
 │   │   ├── routers/     # API route modules
 │   │   ├── services/    # Service modules
-│   │   │   ├── github/  # GitHub API client
+│   │   │   ├── mcp/     # MCP server implementations
 │   │   │   └── langgrapher/ # LangGraph implementation
 │   │   └── main.py      # FastAPI entrypoint
 │   ├── requirements.txt # Python dependencies
@@ -55,8 +56,9 @@ PYTHON_SERVICE_URL=http://localhost:8000
 
 2. Create or update `backend/.env`:
 ```
-GITHUB_API_TOKEN=your_github_token
 OPENAI_API_KEY=your_openai_key
+INTERNAL_DOCS_PATH=path/to/internal_docs.json  # Optional
+WEB_SOURCES_PATH=path/to/web_sources.json     # Optional
 ```
 
 ### Install Dependencies
@@ -69,8 +71,8 @@ npm install
 2. Backend (Python):
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+python3 -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
 ```
 
@@ -92,11 +94,13 @@ npm run dev
 
 ## Features
 
-- **GitHub PR Analysis**: Submit any public GitHub PR URL to receive an AI-powered analysis
+- **Intelligent Query Analysis**: System analyzes and classifies user queries to determine the best approach
+- **Query Rewriting**: Complex queries are broken down into sub-queries for better data retrieval
+- **Dual MCP Servers**: Separate servers for internal documentation and web data
+- **Source Verification**: Responses include verified sources with relevance scores
+- **Response Evaluation**: System evaluates response quality and can refine answers if needed
 - **Conversation Memory**: The AI remembers context from previous messages in the conversation
 - **Markdown Rendering**: Beautiful rendering of markdown content including code blocks and tables
-- **LangGraph Workflow**: Sophisticated AI analysis pipeline using LangGraph
-- **Real-time Feedback**: Immediate response for both PR analysis and general questions
 
 ## Tech Stack
 
@@ -110,8 +114,9 @@ npm run dev
 ### Backend
 - [FastAPI](https://fastapi.tiangolo.com) - Modern Python web framework
 - [LangGraph](https://github.com/langchain-ai/langgraph) - Framework for building stateful LLM applications
+- [FastMCP](https://github.com/anthropics/FastMCP) - Model Context Protocol server implementation
 - [LangChain](https://langchain.com) - Building applications with LLMs
-- [OpenAI](https://openai.com) - GPT-4 API for text generation
+- [OpenAI](https://openai.com) - GPT-4o API for text generation
 
 ## Learn More
 
@@ -120,7 +125,7 @@ To learn more about the technologies used in this project:
 - [Next.js Documentation](https://nextjs.org/docs)
 - [FastAPI Documentation](https://fastapi.tiangolo.com)
 - [LangGraph Documentation](https://python.langchain.com/docs/langgraph)
-- [GitHub API Documentation](https://docs.github.com/en/rest)
+- [FastMCP Documentation](https://github.com/jlowin/fastmcp)
 
 ## Deployment
 
